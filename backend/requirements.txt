@@ -1,40 +1,39 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+sqlalchemy==2.0.29
 websockets==12.0
-python-multipart==0.0.6
+python-multipart==0.0.9
 qrcode==7.4.2
-pillow==10.1.0
+Pillow==12.0.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-dotenv==1.0.0
-psutil==5.9.0
-pydantic==2.5.0
+python-dotenv==1.0.1
+psutil==5.9.8
+pydantic==2.7.1
 
 # Database drivers
-psycopg2-binary==2.9.9
-aiosqlite==0.19.0
+aiosqlite==0.20.0
 
 # Redis support
-redis==5.0.1
+redis==5.0.4
 
 # Production dependencies
-gunicorn==21.2.0
+gunicorn==22.0.0
 httptools==0.6.1
 uvloop==0.19.0
 
 # Monitoring and logging
-structlog==23.2.0
-prometheus-client==0.19.0
+structlog==24.1.0
+prometheus-client==0.20.0
 
 # Security
 cryptography==42.0.8
 
 # CORS
-starlette==0.27.0
+starlette==0.37.2
 
 # File upload
-aiofiles==23.2.0
+aiofiles==23.2.1
 
 # Environment validation
-pydantic-settings==2.1.0
+pydantic-settings==2.2.1
