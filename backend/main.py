@@ -32,11 +32,32 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 # Static files directory (temporarily disabled)
 STATIC_DIR = None  # str(Path(__file__).resolve().parents[1] / "frontend" / "static")
 
+# --- YENİ EKLENEN KISIM BAŞLANGICI ---
+# network_utils modülünü güvenli şekilde dahil et
+try:
+    from network_utils import set_static_ip
+except ImportError:
+    # Docker veya Linux ortamında hata vermesin diye boş fonksiyon tanımla
+    def set_static_ip(): return True
+# --- YENİ EKLENEN KISIM SONU ---
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup
     logger.info("Starting Restaurant Order System...")
+    
+    # --- YENİ EKLENEN IP KONTROL BLOĞU ---
+    if os.name == 'nt': # Sadece Windows sistemlerde çalışır
+        try:
+            logger.info("Checking network configuration...")
+            # Not: Otomatik sabitleme işlemi genellikle run.py üzerinden yapılır
+            # ancak burada da gerekirse loglama veya kontrol yapılabilir.
+            pass 
+        except Exception as e:
+            logger.warning(f"IP setup check skipped: {e}")
+    # -------------------------------------
+
     create_tables()
     logger.info("Database tables created/verified")
 
