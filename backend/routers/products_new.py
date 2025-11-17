@@ -240,7 +240,7 @@ async def get_products(
     active_only: bool = Query(True),
     db: Session = Depends(get_session)
 ):
-    query = db.query(Product).join(Category)
+    query = db.query(Product)
     
     if category_id:
         query = query.filter(Product.category_id == category_id)
@@ -249,7 +249,7 @@ async def get_products(
         query = query.filter(Product.is_featured == True)
     
     if active_only:
-        query = query.filter(Product.is_active == True, Category.is_active == True)
+        query = query.filter(Product.is_active == True)
     
     products = query.offset(skip).limit(limit).all()
     return products

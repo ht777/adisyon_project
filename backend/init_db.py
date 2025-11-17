@@ -33,7 +33,7 @@ def create_default_admin():
         admin_user = User(
             username="admin",
             email="admin@restaurant.com",
-            password_hash=get_password_hash("admin123"),
+            password_hash=get_password_hash("x"),
             role=UserRole.ADMIN,
             is_active=True
         )
@@ -42,7 +42,7 @@ def create_default_admin():
         db.commit()
         logger.info("Default admin user created successfully")
         logger.info("Username: admin")
-        logger.info("Password: admin123")
+        logger.info("Password: x")
         logger.info("⚠️  IMPORTANT: Change the default password immediately!")
         
     except Exception as e:
@@ -63,14 +63,14 @@ def create_sample_categories():
             return
         
         sample_categories = [
-            {"name": "Ana Yemekler", "description": "Lezzetli ana yemeklerimiz"},
-            {"name": "Başlangıçlar", "description": "Neşeli başlangıçlar"},
-            {"name": "Salatalar", "description": "Taze ve sağlıklı salatalar"},
-            {"name": "İçecekler", "description": "Soğuk ve sıcak içecekler"},
-            {"name": "Tatlılar", "description": "Tatlı final"},
-            {"name": "Pizzalar", "description": "İtalyan pizzaları"},
-            {"name": "Burgerler", "description": "Özel burgerler"},
-            {"name": "Deniz Ürünleri", "description": "Taze deniz ürünleri"}
+            {"name": "Ana Yemekler", "icon": "🍖", "order": 1},
+            {"name": "Başlangıçlar", "icon": "🥗", "order": 2},
+            {"name": "Salatalar", "icon": "🥬", "order": 3},
+            {"name": "İçecekler", "icon": "🥤", "order": 4},
+            {"name": "Tatlılar", "icon": "🍰", "order": 5},
+            {"name": "Pizzalar", "icon": "🍕", "order": 6},
+            {"name": "Burgerler", "icon": "🍔", "order": 7},
+            {"name": "Deniz Ürünleri", "icon": "🐟", "order": 8}
         ]
         
         for cat_data in sample_categories:
@@ -228,7 +228,6 @@ def create_sample_tables():
             table = Table(
                 name=f"Masa {i}",
                 number=i,
-                capacity=4 if i <= 15 else 6,  # First 15 tables for 4 people, rest for 6
                 is_active=True,
                 qr_url=None  # This will be generated properly by the API
             )
