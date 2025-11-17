@@ -2,12 +2,13 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from models import Table, get_session
+from models import Table, get_session, Order
 from auth import require_role, get_current_active_user
 from models import UserRole
 import qrcode
 import io
 import base64
+import socket
 from datetime import datetime
 
 router = APIRouter(prefix="/tables", tags=["Tables"])
@@ -33,9 +34,22 @@ class TableUpdate(BaseModel):
     number: Optional[int] = None
     is_active: Optional[bool] = None
 
+# Helper function to get local IP
+def get_base_url():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except:
+        local_ip = "127.0.0.1"
+    return f"http://{local_ip}:8000"
+
 # Generate QR code for table
-async def generate_table_qr(table_number: int, base_url: str = "http://localhost:8000") -> str:
+async def generate_table_qr(table_number: int) -> str:
     """Generate QR code for table that links to customer menu"""
+    base_url = get_base_url()
+    
     # QR code data - link to customer menu with table number
     qr_data = f"{base_url}/menu?table={table_number}"
     
@@ -167,18 +181,18 @@ async def get_table_qr(
     if not table:
         raise HTTPException(status_code=404, detail="Table not found")
     
-    # Generate QR code if not exists
-    if not table.qr_url:
-        qr_data = await generate_table_qr(table.number)
-        table.qr_url = qr_data
-        db.commit()
+    # Her zaman güncel IP ile yeniden üret (IP değişmiş olabilir)
+    qr_data = await generate_table_qr(table.number)
+    table.qr_url = qr_data
+    db.commit()
     
+    base_url = get_base_url()
     return {
         "table_id": table.id,
         "table_name": table.name,
         "table_number": table.number,
         "qr_url": table.qr_url,
-        "menu_url": f"http://localhost:8000/menu?table={table.number}"
+        "menu_url": f"{base_url}/menu?table={table.number}"
     }
 
 @router.post("/{table_id}/regenerate-qr")
@@ -197,10 +211,11 @@ async def regenerate_table_qr(
     table.qr_url = qr_data
     db.commit()
     
+    base_url = get_base_url()
     return {
         "message": "QR code regenerated successfully",
         "qr_url": qr_data,
-        "menu_url": f"http://localhost:8000/menu?table={table.number}"
+        "menu_url": f"{base_url}/menu?table={table.number}"
     }
 
 # Bulk operations

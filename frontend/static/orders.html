@@ -3,1287 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mutfak Ekranı - Restoran Sipariş Sistemi</title>
-    <link rel="stylesheet" href="/static/css/receipt.css">
+    <title>Mutfak Ekranı</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --primary:#0ea5e9; --primary-dark:#0284c7; --good:#10b981; --warn:#f59e0b; --danger:#dc2626; }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter','Arial', sans-serif;
-            background: #0f172a;
-            color: #e5e7eb;
-            overflow-x: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .stats-bar {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 15px;
-        }
-
-        .stat-item {
-            background: rgba(255,255,255,0.2);
-            padding: 10px 20px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .controls {
-            background: #2d2d2d;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        .btn:focus-visible { outline: 3px solid rgba(14,165,233,0.4); outline-offset: 2px; }
-        .ripple { position:absolute; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none; animation:ripple 600ms linear; background:rgba(255,255,255,0.6); width:10px; height:10px; }
-        @keyframes ripple { from{opacity:.8;width:0;height:0} to{opacity:0;width:200px;height:200px} }
-
-        .btn-success {
-            background: #10b981;
-        }
-
-        .btn-warning {
-            background: #f59e0b;
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-        }
-
-        .orders-container {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .order-card {
-            background: #111827;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            border-left: 5px solid #0ea5e9;
-        }
-
-        .order-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-        }
-
-        .order-card.urgent {
-            border-left-color: #ef4444;
-            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-            animation: pulse 2s infinite;
-        }
-
-        .order-card.ready {
-            border-left-color: #10b981;
-            background: linear-gradient(135deg, #111827 0%, #064e3b 100%);
-        }
-
-        .order-card.preparing {
-            border-left-color: #f59e0b;
-            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #444;
-        }
-
-        .order-number {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #0ea5e9;
-        }
-
-        .table-number {
-            background: #0ea5e9;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .order-time {
-            color: #aaa;
-            font-size: 0.9em;
-        }
+        :root { --primary:#0ea5e9; --good:#10b981; --warn:#f59e0b; --danger:#dc2626; --dark:#0f172a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; margin:0; height: 100vh; display: flex; flex-direction: column; }
         
-        .order-timer {
-            font-size: 1.1em;
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 15px;
-            display: inline-block;
-            margin-top: 5px;
-        }
+        .header { background: #1e293b; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .header h1 { margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
         
-        .timer-green {
-            background: #10b981;
-            color: white;
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-        }
+        .orders-grid { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-content: start; }
         
-        .timer-yellow {
-            background: #f59e0b;
-            color: white;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-            animation: pulse-yellow 2s infinite;
-        }
+        .card { background: #1e293b; border-radius: 12px; padding: 15px; border-top: 5px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: slideIn 0.3s; display: flex; flex-direction: column; }
+        .card.urgent { border-top-color: var(--danger); animation: pulse 2s infinite; }
+        .card.preparing { border-top-color: var(--warn); }
         
-        .timer-red {
-            background: #dc2626;
-            color: white;
-            box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
-            animation: pulse-red 1s infinite;
-        }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; font-size: 1.1em; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        .table-badge { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; }
         
-        @keyframes pulse-yellow {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
+        .items { flex: 1; margin-bottom: 15px; }
+        .item { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding: 8px 0; }
+        .qty { background: var(--primary); width: 24px; height: 24px; display: flex; alignItems: center; justify-content: center; border-radius: 50%; font-size: 0.8em; margin-right: 10px; font-weight: bold; }
         
-        @keyframes pulse-red {
-            0%, 100% { 
-                transform: scale(1);
-                box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
-            }
-            50% { 
-                transform: scale(1.1);
-                box-shadow: 0 0 25px rgba(220, 38, 38, 0.8);
-            }
-        }
-
-        .urgent-badge {
-            background: #ff6b6b;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: bold;
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.5; }
-        }
-
-        .order-items {
-            margin-bottom: 15px;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-
-        .item-quantity {
-            background: #0ea5e9;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        .item-name {
-            flex: 1;
-            margin-left: 15px;
-            font-weight: bold;
-        }
-
-        .customer-notes {
-            background: rgba(255, 193, 7, 0.2);
-            border: 1px solid #ffc107;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 15px;
-            color: #ffc107;
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-large {
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .status-bekliyor { background: #ff6b6b; }
-        .status-hazırlanıyor { background: #ffc107; }
-        .status-hazır { background: #28a745; }
-        .status-iptal { background: #dc3545; }
-
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
-        .connection-status.connected {
-            background: rgba(40, 167, 69, 0.8);
-            color: white;
-        }
-
-        .connection-status.disconnected {
-            background: rgba(220, 53, 69, 0.8);
-            color: white;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #aaa;
-        }
-
-        .empty-state h2 {
-            font-size: 2em;
-            margin-bottom: 15px;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: #28a745;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
-            transform: translateX(-400px);
-            transition: transform 0.3s ease;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.order {
-            background: #ff6b6b;
-            animation: slideInOut 0.5s ease;
-        }
-
-        @keyframes slideInOut {
-            0% { transform: translateX(-400px); }
-            20% { transform: translateX(0); }
-            80% { transform: translateX(0); }
-            100% { transform: translateX(-400px); }
-        }
-
-        .audio-permission-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            backdrop-filter: blur(10px);
-        }
-
-        .audio-permission-modal {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            border: 2px solid #0ea5e9;
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .audio-permission-modal h2 {
-            color: #0ea5e9;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
-        }
-
-        .audio-permission-modal p {
-            color: #e5e7eb;
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-
-        .start-service-btn {
-            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            border-radius: 15px;
-            font-size: 1.5em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .start-service-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(14, 165, 233, 0.5);
-        }
-
-        .start-service-btn:active {
-            transform: translateY(-1px);
-        }
-
-        /* Large font and high contrast modes */
-        .large-fonts {
-            font-size: 1.2em;
-        }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: auto; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+        .btn-done { background: var(--good); }
+        .btn-prep { background: var(--warn); color: #0f172a; }
         
-        .large-fonts .order-number {
-            font-size: 2em;
-        }
-        
-        .large-fonts .table-number {
-            font-size: 1.3em;
-            padding: 8px 20px;
-        }
-        
-        .large-fonts .item-name {
-            font-size: 1.2em;
-        }
-        
-        .large-fonts .btn {
-            font-size: 1.1em;
-            padding: 15px 30px;
-        }
-        
-        .large-fonts .btn-large {
-            font-size: 1.3em;
-            padding: 20px 40px;
-        }
-        
-        .high-contrast {
-            background: #000 !important;
-            color: #fff !important;
-        }
-        
-        .high-contrast .order-card {
-            background: #111 !important;
-            border-left-color: #fff !important;
-            color: #fff !important;
-        }
-        
-        .high-contrast .order-card.urgent {
-            background: #220000 !important;
-            border-left-color: #ff0000 !important;
-        }
-        
-        .high-contrast .order-card.ready {
-            background: #002200 !important;
-            border-left-color: #00ff00 !important;
-        }
-        
-        .high-contrast .order-card.preparing {
-            background: #222200 !important;
-            border-left-color: #ffff00 !important;
-        }
-        
-        .high-contrast .btn {
-            background: #fff !important;
-            color: #000 !important;
-            border: 2px solid #fff;
-        }
-        
-        .high-contrast .btn-success {
-            background: #0f0 !important;
-            color: #000 !important;
-            border-color: #0f0;
-        }
-        
-        .high-contrast .btn-warning {
-            background: #ff0 !important;
-            color: #000 !important;
-            border-color: #ff0;
-        }
-        
-        .high-contrast .btn-danger {
-            background: #f00 !important;
-            color: #fff !important;
-            border-color: #f00;
-        }
-        
-        .high-contrast .header {
-            background: #000 !important;
-            color: #fff !important;
-            border-bottom: 2px solid #fff;
-        }
-        
-        .high-contrast .controls {
-            background: #111 !important;
-            border-top: 1px solid #fff;
-        }
-        
-        .high-contrast .customer-notes {
-            background: #222 !important;
-            border-color: #ff0;
-            color: #ff0 !important;
-        }
-        
-        .accessibility-controls {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 10px;
-            z-index: 1001;
-            backdrop-filter: blur(10px);
-        }
-        
-        .accessibility-controls button {
-            display: block;
-            width: 100%;
-            margin-bottom: 10px;
-            background: #444;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
-        .accessibility-controls button:hover {
-            background: #555;
-        }
-        
-        .accessibility-controls button:last-child {
-            margin-bottom: 0;
-        }
+        #overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); display: flex; justify-content: center; align-items: center; z-index: 999; flex-direction: column; }
+        .start-btn { padding: 20px 40px; font-size: 24px; background: var(--primary); color: white; border: none; border-radius: 15px; cursor: pointer; box-shadow: 0 0 30px rgba(14, 165, 233, 0.3); }
 
-        @media (max-width: 768px) {
-            .orders-container {
-                grid-template-columns: 1fr;
-                padding: 10px;
-            }
-            
-            .stats-bar {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
+        @keyframes slideIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
-    <div class="connection-status disconnected" id="connectionStatus">
-        Bağlantı Yok
-    </div>
-
-    <!-- Audio Permission Overlay -->
-    <div class="audio-permission-overlay" id="audioPermissionOverlay">
-        <div class="audio-permission-modal">
-            <h2>🔔 Mutfak Servisi Başlatılıyor</h2>
-            <p>Yeni siparişlerde sesli bildirim alabilmek için lütfen "Servisi Başlat" butonuna tıklayın. Bu, tarayıcınızdan ses izni alacaktır.</p>
-            <button class="start-service-btn" onclick="enableAudioAndStartService()">
-                🚀 Servisi Başlat
-            </button>
-        </div>
-    </div>
-
-    <!-- Accessibility Controls -->
-    <div class="accessibility-controls" id="accessibilityControls">
-        <button onclick="toggleLargeFonts()" title="Büyük Yazılar">
-            🔤 Büyük Yazı
-        </button>
-        <button onclick="toggleHighContrast()" title="Yüksek Kontrast">
-            ⚫⚪ Kontrast
+    <div id="overlay">
+        <i class="fas fa-utensils fa-4x mb-6" style="color: var(--primary);"></i>
+        <h1 style="margin-bottom: 10px;">Mutfak Ekranı</h1>
+        <button class="start-btn" onclick="startApp()">
+            <i class="fas fa-play mr-2"></i> SERVİSİ BAŞLAT
         </button>
     </div>
 
     <div class="header">
-        <h1>🔥 Mutfak Ekranı</h1>
-        <div class="stats-bar">
-            <div class="stat-item">
-                <strong>Bekleyen:</strong> <span id="pendingCount">0</span>
-            </div>
-            <div class="stat-item">
-                <strong>Hazırlanıyor:</strong> <span id="preparingCount">0</span>
-            </div>
-            <div class="stat-item">
-                <strong>Hazır:</strong> <span id="readyCount">0</span>
-            </div>
-            <div class="stat-item">
-                <strong>Toplam:</strong> <span id="totalCount">0</span>
-            </div>
+        <h1>🔥 Mutfak Paneli</h1>
+        <div id="clock" style="font-weight: bold; color: var(--primary);">00:00</div>
+    </div>
+
+    <div class="orders-grid" id="ordersList">
+        <div style="grid-column: 1/-1; text-align: center; color: #64748b; margin-top: 50px;">
+            Sipariş bekleniyor...
         </div>
     </div>
-
-    <div class="controls">
-        <button class="btn" onclick="loadOrders()">🔄 Yenile</button>
-        <button class="btn btn-success" onclick="filterByStatus('bekliyor')">⏰ Bekleyenler</button>
-        <button class="btn btn-warning" onclick="filterByStatus('hazırlanıyor')">👨‍🍳 Hazırlananlar</button>
-        <button class="btn btn-success" onclick="filterByStatus('hazır')">✅ Hazır Olanlar</button>
-        <button class="btn" onclick="showAllOrders()">📋 Tümü</button>
-        <button class="btn btn-danger" onclick="clearSoundCache()">🔇 Sesi Kapat</button>
-    </div>
-
-    <div class="orders-container" id="ordersContainer">
-        <div class="empty-state">
-            <h2>🍽️ Sipariş Yok</h2>
-            <p>Yeni siparişler burada görünecek</p>
-        </div>
-    </div>
-
-    <div class="notification" id="notification"></div>
 
     <script>
-        let orders = [];
-        let ws = null;
-        let currentFilter = 'all';
-        let soundEnabled = true;
-        let audioContext = null;
-        let audioPermissionGranted = false;
-        let orderTimers = {}; // Store timer intervals for each order
-        let largeFontsEnabled = false;
-        let highContrastEnabled = false;
+        let audioCtx;
 
-        // Sayfa yüklendiğinde
-        window.onload = function() {
-            checkAudioPermission();
-            loadAccessibilityPreferences();
-            connectWebSocket();
+        // Saati Güncelle
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+
+        function startApp() {
+            // Ses motorunu başlat
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Boş ses çalarak kilidi aç
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                gain.gain.value = 0.001;
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(0);
+                osc.stop(0.1);
+            } catch(e) { console.log("Ses hatası:", e); }
+
+            document.getElementById('overlay').style.display = 'none';
             loadOrders();
+            connectWS();
             
-            // 30 saniyede bir otomatik yenile
-            setInterval(loadOrders, 30000);
-            setupShortcuts();
-            setupRipples();
-        };
-
-        // WebSocket bağlantısı kur
-        function connectWebSocket() {
-            ws = new WebSocket('ws://localhost:8000/ws');
-            
-            ws.onopen = function() {
-                console.log('WebSocket bağlantısı kuruldu');
-                document.getElementById('connectionStatus').textContent = 'Bağlandı';
-                document.getElementById('connectionStatus').className = 'connection-status connected';
-                
-                // Mutfak client olarak kaydol
-                ws.send(JSON.stringify({
-                    type: 'register',
-                    client_type: 'kitchen'
-                }));
-            };
-            
-            ws.onmessage = function(event) {
-                try {
-                    const message = JSON.parse(event.data);
-                    handleWebSocketMessage(message);
-                } catch (error) {
-                    console.error('WebSocket mesajı işlenemedi:', error);
-                }
-            };
-            
-            ws.onclose = function() {
-                console.log('WebSocket bağlantısı kapatıldı');
-                document.getElementById('connectionStatus').textContent = 'Bağlantı Yok';
-                document.getElementById('connectionStatus').className = 'connection-status disconnected';
-                
-                // 5 saniye sonra tekrar bağlanmayı dene
-                setTimeout(connectWebSocket, 5000);
-            };
-            
-            ws.onerror = function(error) {
-                console.error('WebSocket hatası:', error);
-            };
-        }
-
-        // WebSocket mesajlarını işle
-        function handleWebSocketMessage(message) {
-            if (message.type === 'order_created') {
-                showNotification('🆕 Yeni sipariş geldi!', 'order');
-                playNotificationSound();
-                loadOrders();
-            } else if (message.type === 'order_updated') {
-                showNotification('🔄 Sipariş durumu güncellendi', 'order');
-                loadOrders();
+            // Tam ekran yap
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(()=>{});
             }
         }
 
-        // Siparişleri yükle
+        function playSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            // Ding-dong sesi
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
         async function loadOrders() {
             try {
-                const response = await fetch('/api/orders');
-                const data = await response.json();
-                orders = data.orders;
-                displayOrders();
-                updateStats();
-            } catch (error) {
-                console.error('Siparişler yüklenemedi:', error);
-                showNotification('Siparişler yüklenemedi', 'error');
-            }
+                const res = await fetch('/api/orders/kitchen/pending');
+                if(!res.ok) return;
+                const orders = await res.json();
+                render(orders);
+            } catch(e) { console.error(e); }
         }
 
-        // Siparişleri göster
-        function displayOrders() {
-            const container = document.getElementById('ordersContainer');
-            let filteredOrders = orders;
-
-            // Filtreleme
-            if (currentFilter !== 'all') {
-                filteredOrders = orders.filter(order => order.status === currentFilter);
-            }
-
-            if (filteredOrders.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <h2>🍽️ Sipariş Yok</h2>
-                        <p>${currentFilter === 'all' ? 'Yeni siparişler burada görünecek' : 'Bu kategoride sipariş yok'}</p>
-                    </div>
-                `;
+        function render(orders) {
+            const div = document.getElementById('ordersList');
+            if(orders.length === 0) {
+                div.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #64748b; margin-top: 50px;"><h3>Bekleyen sipariş yok 👍</h3></div>';
                 return;
             }
 
-            // Siparişleri duruma göre sırala (bekleyenler önce)
-            filteredOrders.sort((a, b) => {
-                if (a.is_urgent && !b.is_urgent) return -1;
-                if (!a.is_urgent && b.is_urgent) return 1;
+            div.innerHTML = orders.map(o => {
+                const isPreparing = o.status === 'hazirlaniyor';
+                const isUrgent = (o.customer_notes && o.customer_notes.toLowerCase().includes('acil'));
                 
-                const statusOrder = { 'bekliyor': 1, 'hazırlanıyor': 2, 'hazır': 3, 'iptal': 4 };
-                return statusOrder[a.status] - statusOrder[b.status];
-            });
-
-            container.innerHTML = '';
-            filteredOrders.forEach(order => {
-                const orderCard = createOrderCard(order);
-                container.appendChild(orderCard);
-            });
-        }
-
-        // Sipariş kartı oluştur
-        function createOrderCard(order) {
-            const card = document.createElement('div');
-            card.className = `order-card ${order.is_urgent ? 'urgent' : ''} ${order.status}`;
-            card.dataset.orderId = order.id;
-            
-            const orderTime = new Date(order.created_at).toLocaleString('tr-TR');
-            const statusClass = `status-${order.status}`;
-
-            card.innerHTML = `
-                <div class="order-header">
-                    <div>
-                        <div class="order-number">#${order.id}</div>
-                        <div class="order-time">${orderTime}</div>
-                        <div class="order-timer timer-green" id="timer-${order.id}">
-                            🕐 <span class="timer-text">0 dk</span>
-                        </div>
+                return `
+                <div class="card ${!isPreparing ? 'urgent' : ''} ${isPreparing ? 'preparing' : ''}">
+                    <div class="card-header">
+                        <div class="table-badge">MASA ${o.table_name}</div>
+                        <small>${new Date(o.created_at).toLocaleTimeString().slice(0,5)}</small>
                     </div>
-                    <div style="text-align: right;">
-                        <div class="table-number">Masa ${order.table_number}</div>
-                        ${order.is_urgent ? '<div class="urgent-badge">⚠️ ACİL</div>' : ''}
-                    </div>
-                </div>
-                
-                <div class="order-items">
-                    ${order.items.map(item => `
-                        <div class="order-item">
-                            <div class="item-quantity">${item.quantity}</div>
-                            <div class="item-name">${getProductName(item.product_id)}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                ${order.customer_notes ? `
-                    <div class="customer-notes">
-                        <strong>📝 Not:</strong> ${order.customer_notes}
-                    </div>
-                ` : ''}
-                
-                <div class="order-actions">
-                    <button class="btn btn-large btn-success" onclick="updateOrderStatus(${order.id}, 'hazırlanıyor')" 
-                            ${order.status !== 'bekliyor' ? 'disabled' : ''}>
-                        <span class="status-indicator ${statusClass}"></span>
-                        👨‍🍳 Hazırlanıyor
-                    </button>
-                    <button class="btn btn-large btn-success" onclick="updateOrderStatus(${order.id}, 'hazır')" 
-                            ${order.status === 'hazır' || order.status === 'iptal' ? 'disabled' : ''}>
-                        ✅ Hazır
-                    </button>
-                    <button class="btn btn-large btn-success" onclick="updateOrderStatus(${order.id}, 'teslim_edildi')" 
-                            ${order.status === 'teslim_edildi' || order.status === 'iptal' ? 'disabled' : ''}>
-                        🚚 Teslim Edildi
-                    </button>
-                    <button class="btn btn-large btn-danger" onclick="updateOrderStatus(${order.id}, 'iptal')" 
-                            ${order.status === 'iptal' ? 'disabled' : ''}>
-                        ❌ İptal
-                    </button>
-                    <button class="btn btn-large btn-info" onclick="printReceipt(${order.id})" 
-                            style="background: #17a2b8; border-color: #17a2b8;">
-                        🖨️ Fiş Yazdır
-                    </button>
-                </div>
-            `;
-
-            // Start timer for this order
-            startOrderTimer(order.id, order.created_at);
-
-            return card;
-        }
-
-        function getProductName(id) {
-            // Basit önbellekli ürün adı alma: Admin ya da müşteri ucundan alınmış names yoksa ID göster.
-            if (!window.productNameCache) window.productNameCache = {};
-            if (window.productNameCache[id]) return window.productNameCache[id];
-            // Arka planda ürünleri çek ve önbelleğe yükle (async olarak)
-            fetch('/api/products').then(r=>r.json()).then(data=>{
-                data.products.forEach(p=> window.productNameCache[p.id] = p.name);
-            }).catch(()=>{});
-            return `Ürün #${id}`;
-        }
-
-        // Sipariş durumunu güncelle
-        async function updateOrderStatus(orderId, newStatus) {
-            try {
-                const response = await fetch(`/api/orders/${orderId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                });
-
-                if (response.ok) {
-                    showNotification(`Sipariş #${orderId} durumu güncellendi: ${newStatus}`);
-                    
-                    // WebSocket üzerinden diğer client'lara bildir
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({
-                            type: 'order_updated',
-                            data: { order_id: orderId, status: newStatus }
-                        }));
-                    }
-                    
-                    loadOrders();
-                } else {
-                    showNotification('Sipariş durumu güncellenemedi', 'error');
-                }
-            } catch (error) {
-                showNotification('Sipariş durumu güncellenemedi', 'error');
-            }
-        }
-
-        // Filtreleme fonksiyonları
-        function filterByStatus(status) {
-            currentFilter = status;
-            displayOrders();
-        }
-
-        function showAllOrders() {
-            currentFilter = 'all';
-            displayOrders();
-        }
-
-        function setupShortcuts() {
-            document.addEventListener('keydown',(e)=>{
-                if (e.key==='1') filterByStatus('bekliyor');
-                if (e.key==='2') filterByStatus('hazırlanıyor');
-                if (e.key==='3') filterByStatus('hazır');
-                if (e.key==='0') showAllOrders();
-                if (e.key==='m') { clearSoundCache(); }
-            });
-        }
-
-        function setupRipples() {
-            document.addEventListener('click', (e)=>{
-                const t=e.target.closest('.btn'); if (!t) return;
-                const rect=t.getBoundingClientRect(); const x=e.clientX-rect.left; const y=e.clientY-rect.top;
-                const r=document.createElement('span'); r.className='ripple'; r.style.left=x+'px'; r.style.top=y+'px'; t.appendChild(r); setTimeout(()=>r.remove(),600);
-            });
-        }
-
-        // İstatistikleri güncelle
-        function updateStats() {
-            const pending = orders.filter(o => o.status === 'bekliyor').length;
-            const preparing = orders.filter(o => o.status === 'hazırlanıyor').length;
-            const ready = orders.filter(o => o.status === 'hazır').length;
-            const total = orders.length;
-
-            document.getElementById('pendingCount').textContent = pending;
-            document.getElementById('preparingCount').textContent = preparing;
-            document.getElementById('readyCount').textContent = ready;
-            document.getElementById('totalCount').textContent = total;
-        }
-
-        // Bildirim göster
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
-
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, type === 'order' ? 3000 : 2000);
-        }
-
-        // Ses iznini kontrol et
-        function checkAudioPermission() {
-            // LocalStorage'da daha önce izin verilmiş mi kontrol et
-            const permissionGranted = localStorage.getItem('audioPermissionGranted');
-            if (permissionGranted === 'true') {
-                audioPermissionGranted = true;
-                document.getElementById('audioPermissionOverlay').style.display = 'none';
-                initializeAudioContext();
-            } else {
-                // İzin henüz verilmemiş, overlay'ı göster
-                document.getElementById('audioPermissionOverlay').style.display = 'flex';
-            }
-        }
-
-        // Ses iznini al ve servisi başlat
-        async function enableAudioAndStartService() {
-            try {
-                // AudioContext'i başlat
-                await initializeAudioContext();
-                
-                // Test sesi çal
-                playTestSound();
-                
-                // İzin verildiğini kaydet
-                audioPermissionGranted = true;
-                localStorage.setItem('audioPermissionGranted', 'true');
-                
-                // Overlay'ı gizle
-                document.getElementById('audioPermissionOverlay').style.display = 'none';
-                
-                showNotification('🔊 Servis başlatıldı! Sesli bildirimler aktif.');
-                
-            } catch (error) {
-                console.error('Ses izni alınamadı:', error);
-                showNotification('Ses izni alınamadı. Bildirim sesleri çalmayabilir.', 'error');
-                
-                // Yine de devam et, sessiz modda çalışsın
-                audioPermissionGranted = false;
-                document.getElementById('audioPermissionOverlay').style.display = 'none';
-            }
-        }
-
-        // AudioContext'i başlat
-        function initializeAudioContext() {
-            try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                
-                // AudioContext'i resume et (bazı tarayıcılarda gerekli)
-                if (audioContext.state === 'suspended') {
-                    return audioContext.resume();
-                }
-                
-                return Promise.resolve();
-            } catch (error) {
-                console.error('AudioContext başlatılamadı:', error);
-                return Promise.reject(error);
-            }
-        }
-
-        // Test sesi çal
-        function playTestSound() {
-            if (!audioContext) return;
-            
-            try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
-                
-                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.2);
-            } catch (error) {
-                console.log('Test sesi çalamadı:', error);
-            }
-        }
-
-        // Sesli bildirim
-        function playNotificationSound() {
-            if (!soundEnabled || !audioPermissionGranted) return;
-            
-            try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                
-                // AudioContext'in aktif olduğundan emin ol
-                if (audioContext.state === 'suspended') {
-                    audioContext.resume().then(() => {
-                        playNotificationTone();
-                    });
-                } else {
-                    playNotificationTone();
-                }
-            } catch (error) {
-                console.log('Ses çalamadı:', error);
-            }
-        }
-
-        // Bildirim tonunu çal
-        function playNotificationTone() {
-            if (!audioContext) return;
-            
-            try {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                // Daha dikkat çekici bir ses pattern'i
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.3);
-            } catch (error) {
-                console.log('Bildirim tonu çalamadı:', error);
-            }
-        }
-
-        // Ses önbelleğini temizle (sesi aç/kapat)
-        function clearSoundCache() {
-            soundEnabled = !soundEnabled;
-            
-            if (soundEnabled && !audioPermissionGranted) {
-                // Ses açılmak isteniyor ama izin yoksa, overlay'ı göster
-                document.getElementById('audioPermissionOverlay').style.display = 'flex';
-            } else {
-                showNotification(soundEnabled ? '🔊 Ses açıldı' : '🔇 Ses kapatıldı');
-            }
-        }
-
-        // Sayfa kapatıldığında WebSocket bağlantısını kapat
-        window.addEventListener('beforeunload', function() {
-            if (ws) {
-                ws.close();
-            }
-            // Stop all timers
-            Object.values(orderTimers).forEach(timer => clearInterval(timer));
-        });
-
-        // Start order timer
-        function startOrderTimer(orderId, createdAt) {
-            // Clear existing timer if any
-            if (orderTimers[orderId]) {
-                clearInterval(orderTimers[orderId]);
-            }
-            
-            const timerElement = document.getElementById(`timer-${orderId}`);
-            if (!timerElement) return;
-            
-            const createdTime = new Date(createdAt).getTime();
-            const timerText = timerElement.querySelector('.timer-text');
-            
-            function updateTimer() {
-                const now = new Date().getTime();
-                const elapsedMinutes = Math.floor((now - createdTime) / (1000 * 60));
-                
-                // Update timer text
-                timerText.textContent = `${elapsedMinutes} dk`;
-                
-                // Update timer color based on elapsed time
-                timerElement.classList.remove('timer-green', 'timer-yellow', 'timer-red');
-                
-                if (elapsedMinutes < 10) {
-                    timerElement.classList.add('timer-green');
-                } else if (elapsedMinutes < 20) {
-                    timerElement.classList.add('timer-yellow');
-                } else {
-                    timerElement.classList.add('timer-red');
-                }
-                
-                // Add urgency to order card if too much time passed
-                const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);
-                if (orderCard && elapsedMinutes >= 20) {
-                    orderCard.classList.add('urgent');
-                }
-            }
-            
-            // Update immediately
-            updateTimer();
-            
-            // Update every minute
-            orderTimers[orderId] = setInterval(updateTimer, 60000);
-        }
-
-        // Stop timer for a specific order
-        function stopOrderTimer(orderId) {
-            if (orderTimers[orderId]) {
-                clearInterval(orderTimers[orderId]);
-                delete orderTimers[orderId];
-            }
-        }
-
-        // Toggle large fonts
-        function toggleLargeFonts() {
-            largeFontsEnabled = !largeFontsEnabled;
-            document.body.classList.toggle('large-fonts', largeFontsEnabled);
-            
-            // Save preference
-            localStorage.setItem('largeFontsEnabled', largeFontsEnabled);
-            
-            showNotification(largeFontsEnabled ? '🔤 Büyük yazılar etkinleştirildi' : '🔤 Normal yazılar etkinleştirildi');
-        }
-
-        // Toggle high contrast
-        function toggleHighContrast() {
-            highContrastEnabled = !highContrastEnabled;
-            document.body.classList.toggle('high-contrast', highContrastEnabled);
-            
-            // Save preference
-            localStorage.setItem('highContrastEnabled', highContrastEnabled);
-            
-            showNotification(highContrastEnabled ? '⚫⚪ Yüksek kontrast etkinleştirildi' : '⚫⚪ Normal kontrast etkinleştirildi');
-        }
-
-        // Load accessibility preferences
-        function loadAccessibilityPreferences() {
-            const largeFonts = localStorage.getItem('largeFontsEnabled') === 'true';
-            const highContrast = localStorage.getItem('highContrastEnabled') === 'true';
-            
-            if (largeFonts) {
-                largeFontsEnabled = true;
-                document.body.classList.add('large-fonts');
-            }
-            
-            if (highContrast) {
-                highContrastEnabled = true;
-                document.body.classList.add('high-contrast');
-            }
-        }
-
-        // Print receipt function
-        function printReceipt(orderId) {
-            const order = orders.find(o => o.id === orderId);
-            if (!order) {
-                showNotification('Sipariş bulunamadı!', 'error');
-                return;
-            }
-
-            // Create receipt HTML
-            const receiptHTML = `
-                <div class="receipt-container">
-                    <div class="receipt-header">
-                        <h2>RESTORAN ADI</h2>
-                        <p>Tarih: ${new Date().toLocaleDateString('tr-TR')}</p>
-                        <p>Saat: ${new Date().toLocaleTimeString('tr-TR')}</p>
-                    </div>
-                    
-                    <div class="receipt-info">
-                        <div class="info-row">
-                            <span>Sipariş No:</span>
-                            <span>#${order.id}</span>
-                        </div>
-                        <div class="info-row">
-                            <span>Masa:</span>
-                            <span>${order.table_number}</span>
-                        </div>
-                        <div class="info-row">
-                            <span>Durum:</span>
-                            <span>${getOrderStatusText(order.status)}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="receipt-items">
-                        <div style="border-bottom: 1px solid #000; margin-bottom: 5px; padding-bottom: 5px;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span><strong>Ürün</strong></span>
-                                <span><strong>Adet</strong></span>
-                            </div>
-                        </div>
-                        ${order.items.map(item => `
-                            <div class="receipt-item">
-                                <div class="item-name">${getProductName(item.product_id)}</div>
-                                <div class="item-quantity">${item.quantity}</div>
+                    <div class="items">
+                        ${o.items.map(i => `
+                            <div class="item">
+                                <div style="display:flex; align-items:center;">
+                                    <div class="qty">${i.quantity}</div>
+                                    <div>
+                                        <div>${i.product_name}</div>
+                                        ${formatExtras(i.extras)}
+                                    </div>
+                                </div>
                             </div>
                         `).join('')}
                     </div>
+                    ${o.customer_notes ? `<div style="background:rgba(245,158,11,0.1); color:#fbbf24; padding:8px; border-radius:5px; margin-bottom:10px; font-size:0.9em;">📝 ${o.customer_notes}</div>` : ''}
                     
-                    <div class="receipt-totals">
-                        <div class="total-row">
-                            <span>Ara Toplam:</span>
-                            <span>${order.total_amount.toFixed(2)} TL</span>
-                        </div>
-                        <div class="total-row final">
-                            <span>TOPLAM:</span>
-                            <span>${order.total_amount.toFixed(2)} TL</span>
-                        </div>
-                    </div>
-                    
-                    ${order.customer_notes ? `
-                        <div style="border-top: 1px dashed #000; padding-top: 10px; margin-top: 10px;">
-                            <p><strong>Not:</strong> ${order.customer_notes}</p>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="receipt-footer">
-                        <p>Teşekkür ederiz!</p>
-                        <p>Yine bekleriz</p>
-                        <div class="thank-you">AFİYET OLSUN</div>
-                    </div>
+                    <button class="btn ${isPreparing ? 'btn-done' : 'btn-prep'}" 
+                        onclick="updateStatus(${o.id}, '${isPreparing ? 'hazir' : 'hazirlaniyor'}')">
+                        ${isPreparing ? '✅ SERVİS ET' : '🔥 HAZIRLA'}
+                    </button>
                 </div>
-            `;
-
-            // Create a new window for printing
-            const printWindow = window.open('', '_blank', 'width=300,height=600');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Fiş #${order.id}</title>
-                    <link rel="stylesheet" href="/static/css/receipt.css">
-                    <style>
-                        body { margin: 0; padding: 0; font-family: 'Courier New', monospace; }
-                        @media print { 
-                            body { margin: 0; } 
-                            .no-print { display: none; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${receiptHTML}
-                    <div class="no-print" style="text-align: center; margin: 20px;">
-                        <button onclick="window.print(); window.close();" class="print-receipt-btn">
-                            🖨️ Yazdır ve Kapat
-                        </button>
-                        <button onclick="window.close();" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px;">
-                            ❌ Kapat
-                        </button>
-                    </div>
-                    <script>
-                        // Auto-print after 1 second
-                        setTimeout(function() {
-                            window.print();
-                            setTimeout(function() {
-                                window.close();
-                            }, 1000);
-                        }, 1000);
-                    </script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
+            `}).join('');
         }
 
-        // Helper function to get order status text
-        function getOrderStatusText(status) {
-            const statusTexts = {
-                'bekliyor': 'Bekliyor',
-                'hazırlanıyor': 'Hazırlanıyor',
-                'hazır': 'Hazır',
-                'teslim_edildi': 'Teslim Edildi',
-                'iptal': 'İptal'
+        function formatExtras(extras) {
+            if(!extras || Object.keys(extras).length === 0) return '';
+            return '<small style="color:#94a3b8;">+ Ekstralar</small>';
+        }
+
+        async function updateStatus(id, status) {
+            try {
+                const res = await fetch(`/api/orders/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    // 422 Hatasını Çözen Kısım: Veriyi JSON olarak stringify ediyoruz
+                    body: JSON.stringify({ status: status })
+                });
+                
+                if(res.ok) {
+                    loadOrders();
+                } else {
+                    alert("İşlem başarısız oldu.");
+                }
+            } catch(e) { alert("Bağlantı hatası!"); }
+        }
+
+        function connectWS() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${location.host}/ws`);
+            
+            ws.onopen = () => ws.send(JSON.stringify({type:'register', client_type:'kitchen'}));
+            
+            ws.onmessage = (e) => {
+                try {
+                    const m = JSON.parse(e.data);
+                    if (m.type === 'order_created') { 
+                        playSound(); 
+                        loadOrders(); 
+                        // Tarayıcı bildirimi (Opsiyonel)
+                        if(Notification.permission === "granted") new Notification(`Yeni Sipariş: Masa ${m.data.table_name}`);
+                    } else if (m.type === 'order_updated') {
+                        loadOrders();
+                    }
+                } catch(err){}
             };
-            return statusTexts[status] || status;
+            
+            ws.onclose = () => setTimeout(connectWS, 3000);
         }
+
+        // Bildirim izni iste
+        if (Notification.permission !== "denied") Notification.requestPermission();
     </script>
 </body>
 </html>

@@ -6,12 +6,14 @@ from models import Product, Category, ExtraGroup, ExtraItem, ProductExtraGroup, 
 from auth import require_role, get_current_active_user
 from models import UserRole
 import os
+import sys
 from pathlib import Path
 from datetime import datetime
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
-# Pydantic models for request/response
+# --- MODELLER (Schemas) ---
+
 class CategoryCreate(BaseModel):
     name: str
     icon: Optional[str] = None
@@ -24,6 +26,15 @@ class CategoryResponse(BaseModel):
     order: int
     is_active: bool
     created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Ürün listesinde kullanılacak hafif kategori modeli
+class CategorySummary(BaseModel):
+    id: int
+    name: str
+    icon: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -62,10 +73,10 @@ class ProductResponse(BaseModel):
     description: Optional[str]
     price: float
     image_url: Optional[str]
-    category: Dict[str, Any]
+    # DÜZELTME: Tam CategoryResponse yerine özet model kullanıldı
+    category: Optional[CategorySummary] = None
     is_featured: bool
     is_active: bool
-    in_stock: bool
     created_at: datetime
     
     class Config:
@@ -74,14 +85,15 @@ class ProductResponse(BaseModel):
 class ProductDetailResponse(ProductResponse):
     extra_groups: List[Dict[str, Any]]
 
-# Category endpoints
+# --- ENDPOINTLER ---
+
+# Kategori İşlemleri
 @router.post("/categories", response_model=CategoryResponse)
 async def create_category(
     category: CategoryCreate,
     current_user = Depends(require_role([UserRole.ADMIN])),
     db: Session = Depends(get_session)
 ):
-    # Check if category name already exists
     existing = db.query(Category).filter(Category.name == category.name).first()
     if existing:
         raise HTTPException(status_code=400, detail="Category name already exists")
@@ -90,7 +102,6 @@ async def create_category(
     db.add(new_category)
     db.commit()
     db.refresh(new_category)
-    
     return new_category
 
 @router.get("/categories", response_model=List[CategoryResponse])
@@ -106,14 +117,10 @@ async def get_categories(
     return categories
 
 @router.get("/categories/{category_id}", response_model=CategoryResponse)
-async def get_category(
-    category_id: int,
-    db: Session = Depends(get_session)
-):
+async def get_category(category_id: int, db: Session = Depends(get_session)):
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    
     return category
 
 @router.put("/categories/{category_id}", response_model=CategoryResponse)
@@ -127,7 +134,6 @@ async def update_category(
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     
-    # Check if name already exists (excluding current category)
     existing = db.query(Category).filter(
         Category.name == category_update.name,
         Category.id != category_id
@@ -152,48 +158,17 @@ async def delete_category(
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     
-    # Soft delete
     category.is_active = False
     db.commit()
-    
     return {"message": "Category deleted successfully"}
 
-# Reorder categories endpoint
-@router.post("/categories/reorder")
-async def reorder_categories(
-    order_request: Dict[str, List[Dict[str, int]]],
-    current_user = Depends(require_role([UserRole.ADMIN])),
-    db: Session = Depends(get_session)
-):
-    """Reorder categories based on the provided order list"""
-    try:
-        order_data = order_request.get('order', [])
-        
-        # Update each category's order
-        for item in order_data:
-            category_id = item.get('id')
-            new_order = item.get('order')
-            
-            if category_id and new_order is not None:
-                category = db.query(Category).filter(Category.id == category_id).first()
-                if category:
-                    category.order = new_order
-        
-        db.commit()
-        return {"success": True, "message": "Categories reordered successfully"}
-    
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error reordering categories: {str(e)}")
-
-# Extra Groups endpoints
+# Ekstra Grubu İşlemleri
 @router.post("/extra-groups", response_model=ExtraGroupResponse)
 async def create_extra_group(
     extra_group: ExtraGroupCreate,
     current_user = Depends(require_role([UserRole.ADMIN])),
     db: Session = Depends(get_session)
 ):
-    # Create extra group
     new_group = ExtraGroup(
         name=extra_group.name,
         is_required=extra_group.is_required,
@@ -203,7 +178,6 @@ async def create_extra_group(
     db.commit()
     db.refresh(new_group)
     
-    # Create extra items
     for item in extra_group.items:
         new_item = ExtraItem(
             name=item.name,
@@ -213,8 +187,6 @@ async def create_extra_group(
         db.add(new_item)
     
     db.commit()
-    
-    # Return with items
     group_with_items = db.query(ExtraGroup).filter(ExtraGroup.id == new_group.id).first()
     return group_with_items
 
@@ -226,29 +198,23 @@ async def get_extra_groups(
     query = db.query(ExtraGroup)
     if active_only:
         query = query.filter(ExtraGroup.items.any(ExtraItem.is_active == True))
-    
     groups = query.all()
     return groups
 
 @router.get("/extra-groups/{group_id}", response_model=ExtraGroupResponse)
-async def get_extra_group(
-    group_id: int,
-    db: Session = Depends(get_session)
-):
+async def get_extra_group(group_id: int, db: Session = Depends(get_session)):
     group = db.query(ExtraGroup).filter(ExtraGroup.id == group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Extra group not found")
-    
     return group
 
-# Product endpoints
-@router.post("/products", response_model=ProductResponse)
+# Ürün İşlemleri
+@router.post("", response_model=ProductResponse)
 async def create_product(
     product: ProductCreate,
     current_user = Depends(require_role([UserRole.ADMIN])),
     db: Session = Depends(get_session)
 ):
-    # Check if category exists
     category = db.query(Category).filter(Category.id == product.category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -257,10 +223,9 @@ async def create_product(
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
-    
     return new_product
 
-@router.get("/products", response_model=List[ProductResponse])
+@router.get("", response_model=List[ProductResponse])
 async def get_products(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -273,26 +238,20 @@ async def get_products(
     
     if category_id:
         query = query.filter(Product.category_id == category_id)
-    
     if featured_only:
         query = query.filter(Product.is_featured == True)
-    
     if active_only:
         query = query.filter(Product.is_active == True)
     
     products = query.offset(skip).limit(limit).all()
     return products
 
-@router.get("/products/{product_id}", response_model=ProductDetailResponse)
-async def get_product(
-    product_id: int,
-    db: Session = Depends(get_session)
-):
+@router.get("/{product_id}", response_model=ProductDetailResponse)
+async def get_product(product_id: int, db: Session = Depends(get_session)):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Get extra groups for this product
     extra_groups = []
     for peg in product.extra_groups:
         group_data = {
@@ -312,18 +271,22 @@ async def get_product(
         }
         extra_groups.append(group_data)
     
-    # Add extra groups to response
+    # Kategori özeti oluştur
+    category_data = None
+    if product.category:
+        category_data = {
+            "id": product.category.id,
+            "name": product.category.name,
+            "icon": product.category.icon
+        }
+
     product_dict = {
         "id": product.id,
         "name": product.name,
         "description": product.description,
         "price": product.price,
         "image_url": product.image_url,
-        "category": {
-            "id": product.category.id,
-            "name": product.category.name,
-            "icon": product.category.icon
-        },
+        "category": category_data,
         "is_featured": product.is_featured,
         "is_active": product.is_active,
         "created_at": product.created_at,
@@ -332,7 +295,7 @@ async def get_product(
     
     return product_dict
 
-@router.put("/products/{product_id}", response_model=ProductResponse)
+@router.put("/{product_id}", response_model=ProductResponse)
 async def update_product(
     product_id: int,
     product_update: ProductCreate,
@@ -343,7 +306,6 @@ async def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Check if category exists
     category = db.query(Category).filter(Category.id == product_update.category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -355,7 +317,7 @@ async def update_product(
     db.refresh(product)
     return product
 
-@router.delete("/products/{product_id}")
+@router.delete("/{product_id}")
 async def delete_product(
     product_id: int,
     current_user = Depends(require_role([UserRole.ADMIN])),
@@ -365,31 +327,25 @@ async def delete_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Soft delete
     product.is_active = False
     db.commit()
-    
     return {"message": "Product deleted successfully"}
 
-# Product-Extra Group assignment
-@router.post("/products/{product_id}/extra-groups/{group_id}")
+@router.post("/{product_id}/extra-groups/{group_id}")
 async def assign_extra_group_to_product(
     product_id: int,
     group_id: int,
     current_user = Depends(require_role([UserRole.ADMIN])),
     db: Session = Depends(get_session)
 ):
-    # Check if product exists
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Check if extra group exists
     group = db.query(ExtraGroup).filter(ExtraGroup.id == group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Extra group not found")
     
-    # Check if assignment already exists
     existing = db.query(ProductExtraGroup).filter(
         ProductExtraGroup.product_id == product_id,
         ProductExtraGroup.extra_group_id == group_id
@@ -398,17 +354,13 @@ async def assign_extra_group_to_product(
     if existing:
         raise HTTPException(status_code=400, detail="Extra group already assigned to product")
     
-    # Create assignment
-    assignment = ProductExtraGroup(
-        product_id=product_id,
-        extra_group_id=group_id
-    )
+    assignment = ProductExtraGroup(product_id=product_id, extra_group_id=group_id)
     db.add(assignment)
     db.commit()
     
     return {"message": "Extra group assigned to product successfully"}
 
-@router.delete("/products/{product_id}/extra-groups/{group_id}")
+@router.delete("/{product_id}/extra-groups/{group_id}")
 async def remove_extra_group_from_product(
     product_id: int,
     group_id: int,
@@ -425,65 +377,52 @@ async def remove_extra_group_from_product(
     
     db.delete(assignment)
     db.commit()
-    
     return {"message": "Extra group removed from product successfully"}
 
-# Image upload endpoint
-@router.post("/products/{product_id}/image")
+@router.post("/{product_id}/image")
 async def upload_product_image(
     product_id: int,
     file: UploadFile = File(...),
     current_user = Depends(require_role([UserRole.ADMIN])),
     db: Session = Depends(get_session)
 ):
-    # Check if product exists
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    # Validate file
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
     
-    # Read file content
     content = await file.read()
-    if len(content) > 5 * 1024 * 1024:  # 5MB limit
+    if len(content) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File size must be less than 5MB")
     
-    # Create uploads directory
-    uploads_dir = Path(__file__).resolve().parents[2] / "frontend" / "static" / "uploads"
+    # DÜZELTME: Uploads klasörünün yolu (PyInstaller uyumlu)
+    # Backend klasörünün bir üstüne (proje köküne) çık, oradan frontend/static/uploads'a git
+    if getattr(sys, 'frozen', False):
+        # Exe modunda: exe'nin olduğu yerde 'uploads' klasörü oluştur
+        base_dir = Path(sys.executable).parent
+        uploads_dir = base_dir / "uploads"
+        # URL, static sunucuya mount edilecek (main.py'da ayarlanmalı veya bu yol /uploads/.. olmalı)
+        # Basitlik için frontend/static klasörünü exe'nin yanına koyduğumuzu varsayıyoruz.
+    else:
+        # Geliştirme modunda
+        base_dir = Path(__file__).resolve().parents[2]
+        uploads_dir = base_dir / "frontend" / "static" / "uploads"
+
     uploads_dir.mkdir(parents=True, exist_ok=True)
     
-    # Generate unique filename
     filename = f"product_{product_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
     file_path = uploads_dir / filename
     
-    # Save file
     with open(file_path, "wb") as f:
         f.write(content)
     
-    # Update product with image URL
+    # Frontend'in erişeceği URL
     image_url = f"/static/uploads/{filename}"
+    # Eğer exe modunda dışarıdan sunulacaksa URL değişebilir, şimdilik standart bırakıyoruz.
+
     product.image_url = image_url
     db.commit()
     
     return {"image_url": image_url}
-
-# Stock management endpoint
-@router.put("/products/{product_id}/stock")
-async def update_product_stock(
-    product_id: int,
-    stock_data: Dict[str, bool],
-    current_user = Depends(require_role([UserRole.ADMIN])),
-    db: Session = Depends(get_session)
-):
-    """Update product stock status"""
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    in_stock = stock_data.get('in_stock', True)
-    product.in_stock = in_stock
-    db.commit()
-    
-    return {"success": True, "message": "Product stock updated successfully"}

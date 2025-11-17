@@ -3,787 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Paneli - Restaurant Order System</title>
+    <title>Admin Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            width: 250px;
-            background: #1f2937;
-            color: white;
-            z-index: 1000;
-        }
-        .main-content {
-            margin-left: 250px;
-            min-height: 100vh;
-        }
-        .nav-item {
-            transition: all 0.3s ease;
-        }
-        .nav-item:hover {
-            background: #374151;
-        }
-        .nav-item.active {
-            background: #3b82f6;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-        }
-        .modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .drag-drop-area {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .drag-drop-area.dragover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-        
-        .draggable-item {
-            cursor: grab;
-            transition: all 0.2s ease;
-        }
-        
-        .draggable-item:hover {
-            background: #f9fafb;
-            transform: translateY(-1px);
-        }
-        
-        .draggable-item:active {
-            cursor: grabbing;
-        }
-        
-        .draggable-item.dragging {
-            opacity: 0.5;
-            transform: rotate(2deg);
-        }
-        
-        .drag-over {
-            border-top: 3px solid #3b82f6;
-            background: #eff6ff;
-        }
-        
-        .reorder-handle {
-            color: #9ca3af;
-            cursor: grab;
-            padding: 4px;
-            border-radius: 4px;
-        }
-        
-        .reorder-handle:hover {
-            color: #6b7280;
-            background: #f3f4f6;
-        }
-        
-        /* Toggle Switch Styles */
-        .toggle-switch input:checked + .relative .block {
-            background-color: #10b981;
-        }
-        
-        .toggle-switch input:checked + .relative .dot {
-            transform: translateX(100%);
-        }
-    </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="p-6 border-b border-gray-700">
-            <h1 class="text-xl font-bold">
-                <i class="fas fa-utensils mr-2"></i>
-                Admin Paneli
-            </h1>
+<body class="bg-gray-50 flex h-screen overflow-hidden">
+
+    <div class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col">
+        <div class="p-6 text-2xl font-bold text-center border-b border-slate-800">
+            <i class="fas fa-utensils mr-2"></i> Yönetim
         </div>
-        
-        <nav class="mt-6">
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('dashboard')">
-                <i class="fas fa-tachometer-alt mr-3"></i>
-                Dashboard
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('products')">
-                <i class="fas fa-hamburger mr-3"></i>
-                Ürünler
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('categories')">
-                <i class="fas fa-tags mr-3"></i>
-                Kategoriler
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('tables')">
-                <i class="fas fa-table mr-3"></i>
-                Masalar
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('orders')">
-                <i class="fas fa-clipboard-list mr-3"></i>
-                Siparişler
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('users')">
-                <i class="fas fa-users mr-3"></i>
-                Kullanıcılar
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('kitchen')">
-                <i class="fas fa-fire mr-3"></i>
-                Mutfak
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="showSection('reports')">
-                <i class="fas fa-chart-bar mr-3"></i>
-                Raporlar
-            </div>
-            <div class="nav-item px-6 py-3 cursor-pointer flex items-center" onclick="logout()">
-                <i class="fas fa-sign-out-alt mr-3"></i>
-                Çıkış
-            </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <a href="#" onclick="showSection('dashboard')" class="nav-item block px-6 py-3 hover:bg-slate-800 transition active"><i class="fas fa-tachometer-alt w-6"></i> Dashboard</a>
+            <a href="#" onclick="showSection('orders')" class="nav-item block px-6 py-3 hover:bg-slate-800 transition"><i class="fas fa-clipboard-list w-6"></i> Siparişler</a>
+            <a href="#" onclick="showSection('products')" class="nav-item block px-6 py-3 hover:bg-slate-800 transition"><i class="fas fa-hamburger w-6"></i> Ürünler</a>
+            <a href="#" onclick="showSection('categories')" class="nav-item block px-6 py-3 hover:bg-slate-800 transition"><i class="fas fa-tags w-6"></i> Kategoriler</a>
+            <a href="#" onclick="showSection('tables')" class="nav-item block px-6 py-3 hover:bg-slate-800 transition"><i class="fas fa-chair w-6"></i> Masalar</a>
         </nav>
+        <div class="p-4 border-t border-slate-800">
+            <button onclick="logout()" class="w-full bg-red-600 py-2 rounded text-sm font-bold hover:bg-red-700 transition">ÇIKIŞ YAP</button>
+        </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header -->
-        <header class="bg-white shadow-sm border-b">
-            <div class="px-6 py-4 flex justify-between items-center">
-                <h2 id="sectionTitle" class="text-2xl font-bold text-gray-800">Dashboard</h2>
-                <div class="flex items-center space-x-4">
-                    <span id="userInfo" class="text-gray-600"></span>
-                    <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
-                        <i class="fas fa-sign-out-alt mr-2"></i>
-                        Çıkış
-                    </button>
-                </div>
-            </div>
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <header class="bg-white shadow p-4 flex justify-between items-center">
+            <h2 id="pageTitle" class="text-xl font-bold text-gray-800">Dashboard</h2>
+            <div class="text-sm text-gray-600">Hoşgeldin, <span id="adminName" class="font-bold">Admin</span></div>
         </header>
 
-        <!-- Content Area -->
-        <main class="p-6">
-            <!-- Dashboard Section -->
+        <main class="flex-1 overflow-y-auto p-6">
+            
             <div id="dashboardSection" class="section">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center">
-                            <div class="bg-blue-100 p-3 rounded-full">
-                                <i class="fas fa-hamburger text-blue-600 text-xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-gray-600 text-sm">Toplam Ürün</p>
-                                <p id="totalProducts" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                        <h3 class="text-gray-500 text-sm">Toplam Ürün</h3>
+                        <p class="text-3xl font-bold" id="statProducts">-</p>
                     </div>
-                    
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center">
-                            <div class="bg-green-100 p-3 rounded-full">
-                                <i class="fas fa-clipboard-list text-green-600 text-xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-gray-600 text-sm">Aktif Sipariş</p>
-                                <p id="activeOrders" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                        <h3 class="text-gray-500 text-sm">Toplam Sipariş</h3>
+                        <p class="text-3xl font-bold" id="statOrders">-</p>
                     </div>
-                    
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center">
-                            <div class="bg-yellow-100 p-3 rounded-full">
-                                <i class="fas fa-table text-yellow-600 text-xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-gray-600 text-sm">Toplam Masa</p>
-                                <p id="totalTables" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center">
-                            <div class="bg-purple-100 p-3 rounded-full">
-                                <i class="fas fa-users text-purple-600 text-xl"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-gray-600 text-sm">Bugünkü Sipariş</p>
-                                <p id="todayOrders" class="text-2xl font-bold text-gray-800">0</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold mb-4">Günlük Satış Grafiği</h3>
-                        <canvas id="dailySalesChart" width="400" height="200"></canvas>
-                    </div>
-                    
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold mb-4">Sipariş Durumları</h3>
-                        <canvas id="orderStatusChart" width="400" height="200"></canvas>
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-orange-500">
+                        <h3 class="text-gray-500 text-sm">Masa Sayısı</h3>
+                        <p class="text-3xl font-bold" id="statTables">-</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Products Section -->
             <div id="productsSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold">Ürün Yönetimi</h3>
-                    <button onclick="showAddProductModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                        <i class="fas fa-plus mr-2"></i>
-                        Yeni Ürün
-                    </button>
+                <div class="flex justify-between mb-4">
+                    <h3 class="text-lg font-bold">Ürün Listesi</h3>
+                    <button onclick="openProductModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Yeni Ürün</button>
                 </div>
-                
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-hidden">
                     <table class="min-w-full">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-slate-100">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ürün</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fiyat</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durum</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+                                <th class="p-3 text-left">Resim</th>
+                                <th class="p-3 text-left">Ürün Adı</th>
+                                <th class="p-3 text-left">Kategori</th>
+                                <th class="p-3 text-left">Fiyat</th>
+                                <th class="p-3 text-left">İşlem</th>
                             </tr>
                         </thead>
-                        <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Products will be loaded here -->
-                        </tbody>
+                        <tbody id="productsTable"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Categories Section -->
             <div id="categoriesSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold">Kategori Yönetimi</h3>
-                    <button onclick="showAddCategoryModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                        <i class="fas fa-plus mr-2"></i>
-                        Yeni Kategori
-                    </button>
+                <div class="flex justify-between mb-4">
+                    <h3 class="text-lg font-bold">Kategori Listesi</h3>
+                    <button onclick="addCategory()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Yeni Kategori</button>
                 </div>
-                
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-hidden">
                     <table class="min-w-full">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-slate-100">
                             <tr>
-                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sırala</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İkon</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sıra</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+                                <th class="p-3 text-left">İkon</th>
+                                <th class="p-3 text-left">Kategori Adı</th>
+                                <th class="p-3 text-left">Sıra</th>
+                                <th class="p-3 text-left">İşlem</th>
                             </tr>
                         </thead>
-                        <tbody id="categoriesTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Categories will be loaded here -->
-                        </tbody>
+                        <tbody id="categoriesTable"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Tables Section -->
             <div id="tablesSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold">Masa Yönetimi</h3>
-                    <button onclick="showAddTableModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                        <i class="fas fa-plus mr-2"></i>
-                        Yeni Masa
-                    </button>
+                <div class="flex justify-between mb-4">
+                    <h3 class="text-lg font-bold">Masa Listesi</h3>
+                    <button onclick="addTable()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Yeni Masa</button>
                 </div>
-                
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-hidden">
                     <table class="min-w-full">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-slate-100">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Masa</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Numara</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">QR Kod</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+                                <th class="p-3 text-left">Masa Adı</th>
+                                <th class="p-3 text-left">No</th>
+                                <th class="p-3 text-left">QR Kod</th>
+                                <th class="p-3 text-left">İşlem</th>
                             </tr>
                         </thead>
-                        <tbody id="tablesTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Tables will be loaded here -->
-                        </tbody>
+                        <tbody id="tablesTable"></tbody>
                     </table>
                 </div>
             </div>
-
-            <!-- Orders Section -->
+            
             <div id="ordersSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold">Sipariş Yönetimi</h3>
-                    <div class="flex space-x-2">
-                        <select id="orderStatusFilter" onchange="filterOrders()" class="border border-gray-300 rounded-lg px-3 py-2">
-                            <option value="">Tümü</option>
-                            <option value="bekliyor">Bekliyor</option>
-                            <option value="hazirlaniyor">Hazırlanıyor</option>
-                            <option value="hazir">Hazır</option>
-                            <option value="teslim_edildi">Teslim Edildi</option>
-                        </select>
-                    </div>
+                <div class="flex justify-between mb-4">
+                    <h3 class="text-lg font-bold">Son Siparişler</h3>
+                    <button onclick="loadOrders()" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Yenile</button>
                 </div>
-                
-                <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="bg-white rounded shadow overflow-hidden">
                     <table class="min-w-full">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-slate-100">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sipariş</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Masa</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durum</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tutar</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+                                <th class="p-3 text-left">ID</th>
+                                <th class="p-3 text-left">Masa</th>
+                                <th class="p-3 text-left">Tutar</th>
+                                <th class="p-3 text-left">Durum</th>
+                                <th class="p-3 text-left">Tarih</th>
                             </tr>
                         </thead>
-                        <tbody id="ordersTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Orders will be loaded here -->
-                        </tbody>
+                        <tbody id="ordersTable"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Users Section -->
-            <div id="usersSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold">Kullanıcı Yönetimi</h3>
-                    <button onclick="showAddUserModal()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                        <i class="fas fa-plus mr-2"></i>
-                        Yeni Kullanıcı
-                    </button>
-                </div>
-                
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kullanıcı</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rol</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durum</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Users will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Kitchen Section -->
-            <div id="kitchenSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold">Mutfak Paneli</h3>
-                    <div class="flex items-center space-x-2">
-                        <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm animate-pulse">
-                            <i class="fas fa-circle mr-1"></i>
-                            Canlı
-                        </span>
-                        <button onclick="refreshKitchenOrders()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                            <i class="fas fa-sync-alt mr-2"></i>
-                            Yenile
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h4 class="text-lg font-semibold mb-4 text-orange-600">
-                            <i class="fas fa-clock mr-2"></i>
-                            Bekleyen Siparişler
-                        </h4>
-                        <div id="pendingOrders" class="space-y-3">
-                            <!-- Pending orders will be loaded here -->
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h4 class="text-lg font-semibold mb-4 text-green-600">
-                            <i class="fas fa-check mr-2"></i>
-                            Hazırlanan Siparişler
-                        </h4>
-                        <div id="preparingOrders" class="space-y-3">
-                            <!-- Preparing orders will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reports Section -->
-            <div id="reportsSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-semibold">Raporlar</h3>
-                    <div class="flex space-x-2">
-                        <input type="date" id="reportStartDate" class="border border-gray-300 rounded-lg px-3 py-2">
-                        <input type="date" id="reportEndDate" class="border border-gray-300 rounded-lg px-3 py-2">
-                        <button onclick="generateReport()" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                            <i class="fas fa-chart-line mr-2"></i>
-                            Rapor Oluştur
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h4 class="text-lg font-semibold mb-4">Satış Grafiği</h4>
-                        <canvas id="salesChart" width="400" height="200"></canvas>
-                    </div>
-                    
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h4 class="text-lg font-semibold mb-4">En Çok Satan Ürünler</h4>
-                        <div id="topProductsChart">
-                            <!-- Top products chart will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h4 class="text-lg font-semibold">Detaylı Satış Raporu</h4>
-                    </div>
-                    <div id="reportDetails" class="p-6">
-                        <!-- Report details will be loaded here -->
-                    </div>
-                </div>
-            </div>
         </main>
     </div>
 
-    <!-- Modals will be added here -->
-    <div id="modalContainer">
-        <!-- Product Modal -->
-        <div id="productModal" class="modal">
-            <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 id="productModalTitle" class="text-xl font-bold">Yeni Ürün</h3>
-                        <button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times text-xl"></i>
-                        </button>
-                    </div>
-                    
-                    <form id="productForm" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Ürün Adı</label>
-                                <input type="text" id="productName" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Fiyat</label>
-                                <input type="number" id="productPrice" step="0.01" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-                            <select id="productCategory" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
-                                <option value="">Kategori Seçin</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
-                            <textarea id="productDescription" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2"></textarea>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="productFeatured" class="mr-2">
-                                    <span class="text-sm font-medium text-gray-700">Öne Çıkan Ürün</span>
-                                </label>
-                            </div>
-                            <div>
-                                <label class="flex items-center">
-                                    <input type="checkbox" id="productActive" class="mr-2" checked>
-                                    <span class="text-sm font-medium text-gray-700">Aktif</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Ürün Görseli</label>
-                            <div class="drag-drop-area" id="productImageDropArea">
-                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
-                                <p class="text-gray-600">Görseli buraya sürükleyin veya tıklayın</p>
-                                <input type="file" id="productImage" accept="image/*" class="hidden">
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3 pt-4">
-                            <button type="button" onclick="closeProductModal()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
-                                İptal
-                            </button>
-                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                                Kaydet
-                            </button>
-                        </div>
-                    </form>
+    <div id="productModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg w-96 p-6">
+            <h3 class="text-xl font-bold mb-4">Yeni Ürün Ekle</h3>
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <input type="text" name="name" placeholder="Ürün Adı" class="w-full border p-2 rounded mb-3" required>
+                <textarea name="description" placeholder="Açıklama" class="w-full border p-2 rounded mb-3"></textarea>
+                <input type="number" name="price" placeholder="Fiyat (TL)" step="0.01" class="w-full border p-2 rounded mb-3" required>
+                
+                <select name="category_id" id="categorySelect" class="w-full border p-2 rounded mb-3" required>
+                    <option value="">Kategori Seçin</option>
+                </select>
+                
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-600 mb-1">Ürün Görseli</label>
+                    <input type="file" id="productImage" accept="image/*" class="w-full text-sm">
                 </div>
-            </div>
+
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeProductModal()" class="bg-gray-300 px-4 py-2 rounded">İptal</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Kaydet</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // Global variables
-        let currentUser = null;
-        let authToken = null;
-        let currentSection = 'dashboard';
-        let charts = {};
+        let authToken = localStorage.getItem('authToken');
+        if(!authToken) window.location.href = '/login.html';
 
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
-        });
+        // API Headers Helper
+        const getHeaders = () => ({ 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' });
 
-        function checkAuth() {
-            authToken = localStorage.getItem('authToken');
-            if (!authToken) {
-                window.location.href = '/login.html';
-                return;
-            }
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id + 'Section').classList.remove('hidden');
+            document.getElementById('pageTitle').innerText = id.charAt(0).toUpperCase() + id.slice(1);
             
-            // Get user info
-            fetch('/api/auth/me', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Authentication failed');
-                }
-            })
-            .then(data => {
-                currentUser = data;
-                document.getElementById('userInfo').textContent = currentUser.username;
-                initializeApp();
-            })
-            .catch(error => {
-                console.error('Authentication error:', error);
-                window.location.href = '/login.html';
-            });
-        }
-
-        function initializeApp() {
-            showSection('dashboard');
-            loadDashboardData();
-            connectWebSocket();
-        }
-
-        function showSection(sectionName) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.add('hidden');
-            });
-            
-            // Show selected section
-            document.getElementById(sectionName + 'Section').classList.remove('hidden');
-            
-            // Update navigation
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Update section title
-            const titles = {
-                'dashboard': 'Dashboard',
-                'products': 'Ürün Yönetimi',
-                'categories': 'Kategori Yönetimi',
-                'tables': 'Masa Yönetimi',
-                'orders': 'Sipariş Yönetimi',
-                'users': 'Kullanıcı Yönetimi',
-                'kitchen': 'Mutfak Paneli',
-                'reports': 'Raporlar'
-            };
-            document.getElementById('sectionTitle').textContent = titles[sectionName];
-            
-            currentSection = sectionName;
-            
-            // Load section data
-            switch(sectionName) {
-                case 'dashboard':
-                    loadDashboardData();
-                    break;
-                case 'products':
-                    loadProducts();
-                    break;
-                case 'categories':
-                    loadCategories();
-                    break;
-                case 'tables':
-                    loadTables();
-                    break;
-                case 'orders':
-                    loadOrders();
-                    break;
-                case 'users':
-                    loadUsers();
-                    break;
-                case 'kitchen':
-                    loadKitchenOrders();
-                    break;
-                case 'reports':
-                    loadReports();
-                    break;
-            }
-        }
-
-        function loadDashboardData() {
-            fetch('/api/admin/dashboard', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Update statistics
-                document.getElementById('totalProducts').textContent = data.overview.total_products;
-                document.getElementById('activeOrders').textContent = data.sales.active_orders;
-                document.getElementById('totalTables').textContent = data.overview.total_tables;
-                document.getElementById('todayOrders').textContent = data.sales.today_orders;
-                
-                // Update charts
-                updateDashboardCharts(data);
-            })
-            .catch(error => {
-                console.error('Error loading dashboard data:', error);
-            });
-        }
-
-        function updateDashboardCharts(data) {
-            // Daily sales chart
-            const dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
-            if (charts.dailySales) {
-                charts.dailySales.destroy();
-            }
-            
-            charts.dailySales = new Chart(dailySalesCtx, {
-                type: 'line',
-                data: {
-                    labels: data.sales.daily_trend.map(d => new Date(d.date).toLocaleDateString('tr-TR')),
-                    datasets: [{
-                        label: 'Günlük Satış',
-                        data: data.sales.daily_trend.map(d => d.revenue),
-                        borderColor: 'rgb(59, 130, 246)',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-            
-            // Order status chart
-            const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-            if (charts.orderStatus) {
-                charts.orderStatus.destroy();
-            }
-            
-            charts.orderStatus = new Chart(orderStatusCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(data.orders_by_status),
-                    datasets: [{
-                        data: Object.values(data.orders_by_status),
-                        backgroundColor: [
-                            'rgb(239, 68, 68)',
-                            'rgb(245, 158, 11)',
-                            'rgb(34, 197, 94)',
-                            'rgb(59, 130, 246)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-
-        function loadProducts() {
-            fetch('/api/products', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                renderProductsTable(data);
-            })
-            .catch(error => {
-                console.error('Error loading products:', error);
-            });
-        }
-
-        function renderProductsTable(products) {
-            const tbody = document.getElementById('productsTableBody');
-            tbody.innerHTML = '';
-            
-            products.forEach(product => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4">
-                        <div class="flex items-center">
-                            <img src="${product.image_url || 'https://via.placeholder.com/50x50'}" alt="${product.name}" class="w-12 h-12 rounded-lg object-cover mr-3">
-                            <div>
-                                <div class="font-medium text-gray-900">${product.name}</div>
-                                <div class="text-sm text-gray-500">${product.description || ''}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${product.category.name}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${product.price.toFixed(2)} TL</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full ${product.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${product.is_active ? 'Aktif' : 'Pasif'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center space-x-2">
-                            <label class="toggle-switch flex items-center cursor-pointer">
-                                <input type="checkbox" 
-                                       ${product.in_stock ? 'checked' : ''} 
-                                       onchange="toggleProductStock(${product.id}, this.checked)"
-                                       class="sr-only">
-                                <div class="relative">
-                                    <div class="block bg-gray-200 w-14 h-8 rounded-full"></div>
-                                    <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
-                                </div>
-                                <div class="ml-3 text-gray-700 font-medium text-sm">
-                                    ${product.in_stock ? 'Stokta' : 'Stokta Yok'}
-                                </div>
-                            </label>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <button onclick="editProduct(${product.id})" class="text-blue-600 hover:text-blue-900 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteProduct(${product.id})" class="text-red-600 hover:text-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+            if(id === 'dashboard') loadStats();
+            if(id === 'products') loadProducts();
+            if(id === 'categories') loadCategories();
+            if(id === 'tables') loadTables();
+            if(id === 'orders') loadOrders();
         }
 
         function logout() {
@@ -791,517 +184,212 @@
             window.location.href = '/login.html';
         }
 
-        function connectWebSocket() {
-            const ws = new WebSocket(`ws://${window.location.host}/ws`);
-            
-            ws.onopen = function() {
-                console.log('WebSocket connected');
-                ws.send(JSON.stringify({
-                    type: 'register',
-                    client_type: 'admin'
-                }));
-            };
-            
-            ws.onmessage = function(event) {
-                const message = JSON.parse(event.data);
-                handleWebSocketMessage(message);
-            };
-            
-            ws.onclose = function() {
-                console.log('WebSocket disconnected');
-                // Reconnect after 5 seconds
-                setTimeout(connectWebSocket, 5000);
-            };
-            
-            ws.onerror = function(error) {
-                console.error('WebSocket error:', error);
-            };
+        // --- DASHBOARD ---
+        async function loadStats() {
+            // Basit istatistikler (Gerçek API'ye bağlanabilir)
+            const pRes = await fetch('/api/products', {headers: getHeaders()});
+            const pData = await pRes.json();
+            document.getElementById('statProducts').innerText = pData.length || 0;
+
+            const tRes = await fetch('/api/tables', {headers: getHeaders()});
+            const tData = await tRes.json();
+            document.getElementById('statTables').innerText = tData.length || 0;
         }
 
-        function handleWebSocketMessage(message) {
-            if (message.type === 'order_created' || message.type === 'order_updated') {
-                // Refresh current section if it's orders or kitchen
-                if (currentSection === 'orders' || currentSection === 'kitchen') {
-                    if (currentSection === 'orders') {
-                        loadOrders();
-                    } else if (currentSection === 'kitchen') {
-                        loadKitchenOrders();
-                    }
-                }
-                
-                // Play notification sound
-                playNotificationSound();
-                
-                // Show notification
-                showNotification(`Yeni sipariş - Masa ${message.data.table_name}`);
-            }
-        }
-
-        function playNotificationSound() {
-            // Create a simple beep sound
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
-            audio.play().catch(e => console.log('Audio play failed:', e));
-        }
-
-        function showNotification(message) {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-            notification.innerHTML = `
-                <div class="flex items-center">
-                    <i class="fas fa-bell mr-2"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Remove after 5 seconds
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
-
-        // Add more functions for other sections...
-        function loadCategories() {
-            fetch('/api/products/categories', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                renderCategoriesTable(data);
-            })
-            .catch(error => {
-                console.error('Error loading categories:', error);
-            });
-        }
-
-        function renderCategoriesTable(categories) {
-            const tbody = document.getElementById('categoriesTableBody');
+        // --- PRODUCTS ---
+        async function loadProducts() {
+            const res = await fetch('/api/products', {headers: getHeaders()});
+            const data = await res.json();
+            const tbody = document.getElementById('productsTable');
             tbody.innerHTML = '';
             
-            categories.forEach((category, index) => {
-                const row = document.createElement('tr');
-                row.className = 'draggable-item';
-                row.draggable = true;
-                row.dataset.categoryId = category.id;
-                row.dataset.currentOrder = category.order;
-                
-                row.innerHTML = `
-                    <td class="px-3 py-4">
-                        <div class="reorder-handle" title="Sürükle bırak ile sırala">
-                            <i class="fas fa-grip-vertical"></i>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-2xl">${category.icon || '🍽️'}</div>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-900 font-medium">${category.name}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">
-                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                            Sıra ${category.order}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <button onclick="editCategory(${category.id})" class="text-blue-600 hover:text-blue-900 mr-3" title="Düzenle">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteCategory(${category.id})" class="text-red-600 hover:text-red-900" title="Sil">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
+            data.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-3"><img src="${p.image_url || ''}" class="w-10 h-10 object-cover rounded bg-gray-200"></td>
+                        <td class="p-3 font-medium">${p.name}</td>
+                        <td class="p-3 text-gray-600">${p.category ? p.category.name : '-'}</td>
+                        <td class="p-3 text-green-600 font-bold">${p.price} ₺</td>
+                        <td class="p-3">
+                            <button onclick="deleteProduct(${p.id})" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
                 `;
-                
-                // Add drag and drop event listeners
-                row.addEventListener('dragstart', handleDragStart);
-                row.addEventListener('dragover', handleDragOver);
-                row.addEventListener('drop', handleDrop);
-                row.addEventListener('dragend', handleDragEnd);
-                
-                tbody.appendChild(row);
             });
         }
 
-        // Drag and Drop Functions for Category Reordering
-        let draggedElement = null;
-        let draggedCategoryId = null;
-
-        function handleDragStart(e) {
-            draggedElement = this;
-            draggedCategoryId = this.dataset.categoryId;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.innerHTML);
+        async function openProductModal() {
+            // Kategorileri yükle
+            const res = await fetch('/api/products/categories', {headers: getHeaders()});
+            const cats = await res.json();
+            const select = document.getElementById('categorySelect');
+            select.innerHTML = '<option value="">Kategori Seçin</option>';
+            cats.forEach(c => select.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+            
+            document.getElementById('productModal').classList.remove('hidden');
         }
 
-        function handleDragOver(e) {
-            if (e.preventDefault) {
-                e.preventDefault();
-            }
-            e.dataTransfer.dropEffect = 'move';
-            
-            const afterElement = getDragAfterElement(e.currentTarget.parentElement, e.clientY);
-            const dragging = document.querySelector('.dragging');
-            
-            if (afterElement == null) {
-                e.currentTarget.parentElement.appendChild(dragging);
-            } else {
-                e.currentTarget.parentElement.insertBefore(dragging, afterElement);
-            }
-            
-            return false;
+        function closeProductModal() {
+            document.getElementById('productModal').classList.add('hidden');
         }
 
-        function handleDrop(e) {
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-            return false;
-        }
+        async function saveProduct(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const productData = {
+                name: formData.get('name'),
+                description: formData.get('description'),
+                price: parseFloat(formData.get('price')),
+                category_id: parseInt(formData.get('category_id')),
+                is_active: true
+            };
 
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            
-            // Get all category rows and their new order
-            const rows = Array.from(document.querySelectorAll('#categoriesTableBody tr'));
-            const newOrder = rows.map((row, index) => ({
-                id: row.dataset.categoryId,
-                order: index + 1
-            }));
-            
-            // Save the new order to the server
-            saveCategoryOrder(newOrder);
-            
-            return false;
-        }
-
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
-            
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
+            try {
+                // 1. Ürünü Oluştur
+                const res = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(productData)
+                });
                 
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
-                }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
+                if(!res.ok) throw new Error('Ürün oluşturulamadı');
+                const newProduct = await res.json();
 
-        function saveCategoryOrder(newOrder) {
-            fetch('/api/products/categories/reorder', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ order: newOrder })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('Kategori sıralaması güncellendi!', 'success');
-                    loadCategories(); // Reload to reflect the new order
-                } else {
-                    showToast('Sıralama güncellenirken hata oluştu.', 'error');
+                // 2. Resim Varsa Yükle
+                const imageFile = document.getElementById('productImage').files[0];
+                if(imageFile) {
+                    const imgData = new FormData();
+                    imgData.append('file', imageFile);
+                    
+                    await fetch(`/api/products/${newProduct.id}/image`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` }, // Content-Type otomatik
+                        body: imgData
+                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error saving category order:', error);
-                showToast('Sıralama kaydedilirken hata oluştu.', 'error');
-            });
-        }
 
-        function toggleProductStock(productId, inStock) {
-            fetch(`/api/products/${productId}/stock`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ in_stock: inStock })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(`Ürün stoğu ${inStock ? 'güncellendi' : 'güncellendi'}!`, 'success');
-                } else {
-                    showToast('Stok güncellenirken hata oluştu.', 'error');
-                    // Revert the toggle
-                    loadProducts();
-                }
-            })
-            .catch(error => {
-                console.error('Error updating product stock:', error);
-                showToast('Stok güncellenirken hata oluştu.', 'error');
-                // Revert the toggle
+                closeProductModal();
                 loadProducts();
-            });
-        }
-
-        function loadTables() {
-            fetch('/api/tables', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                renderTablesTable(data);
-            })
-            .catch(error => {
-                console.error('Error loading tables:', error);
-            });
-        }
-
-        function renderTablesTable(tables) {
-            const tbody = document.getElementById('tablesTableBody');
-            tbody.innerHTML = '';
-            
-            tables.forEach(table => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-900">${table.name}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${table.number}</td>
-                    <td class="px-6 py-4">
-                        <button onclick="viewQRCode(${table.id})" class="text-blue-600 hover:text-blue-900">
-                            <i class="fas fa-qrcode mr-1"></i>
-                            Görüntüle
-                        </button>
-                    </td>
-                    <td class="px-6 py-4">
-                        <button onclick="editTable(${table.id})" class="text-blue-600 hover:text-blue-900 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteTable(${table.id})" class="text-red-600 hover:text-red-900">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function loadOrders() {
-            fetch('/api/orders', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                renderOrdersTable(data);
-            })
-            .catch(error => {
-                console.error('Error loading orders:', error);
-            });
-        }
-
-        function renderOrdersTable(orders) {
-            const tbody = document.getElementById('ordersTableBody');
-            tbody.innerHTML = '';
-            
-            orders.forEach(order => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-900">#${order.id}</td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${order.table_name}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full ${getOrderStatusColor(order.status)}">
-                            ${getOrderStatusText(order.status)}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-900">${order.total_amount.toFixed(2)} TL</td>
-                    <td class="px-6 py-4">
-                        <button onclick="viewOrder(${order.id})" class="text-blue-600 hover:text-blue-900 mr-3">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button onclick="updateOrderStatus(${order.id})" class="text-green-600 hover:text-green-900">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function loadUsers() {
-            fetch('/api/admin/users', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                renderUsersTable(data.users);
-            })
-            .catch(error => {
-                console.error('Error loading users:', error);
-            });
-        }
-
-        function renderUsersTable(users) {
-            const tbody = document.getElementById('usersTableBody');
-            tbody.innerHTML = '';
-            
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 text-sm text-gray-900">${user.username}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                            ${getRoleText(user.role)}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${user.is_active ? 'Aktif' : 'Pasif'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">
-                        <button onclick="editUser(${user.id})" class="text-blue-600 hover:text-blue-900 mr-3">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="toggleUserStatus(${user.id}, ${user.is_active})" class="text-yellow-600 hover:text-yellow-900">
-                            <i class="fas fa-toggle-on"></i>
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function loadKitchenOrders() {
-            fetch('/api/orders/kitchen/pending', {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                renderKitchenOrders(data);
-            })
-            .catch(error => {
-                console.error('Error loading kitchen orders:', error);
-            });
-        }
-
-        function renderKitchenOrders(orders) {
-            const pendingOrders = orders.filter(order => order.status === 'bekliyor');
-            const preparingOrders = orders.filter(order => order.status === 'hazirlaniyor');
-            
-            // Render pending orders
-            const pendingContainer = document.getElementById('pendingOrders');
-            pendingContainer.innerHTML = '';
-            
-            if (pendingOrders.length === 0) {
-                pendingContainer.innerHTML = '<p class="text-gray-500 text-center">Bekleyen sipariş yok</p>';
-            } else {
-                pendingOrders.forEach(order => {
-                    const orderElement = document.createElement('div');
-                    orderElement.className = 'border border-orange-200 rounded-lg p-4 bg-orange-50';
-                    orderElement.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h5 class="font-semibold text-orange-800">Masa ${order.table_name}</h5>
-                                <p class="text-sm text-orange-600">Sipariş #${order.id}</p>
-                            </div>
-                            <button onclick="updateOrderStatus(${order.id}, 'hazirlaniyor')" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600">
-                                Hazırlanıyor
-                            </button>
-                        </div>
-                        <div class="space-y-1">
-                            ${order.items.map(item => `
-                                <div class="flex justify-between text-sm">
-                                    <span>${item.product_name} x${item.quantity}</span>
-                                    <span>${item.subtotal.toFixed(2)} TL</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        ${order.customer_notes ? `<p class="text-xs text-orange-600 mt-2">Not: ${order.customer_notes}</p>` : ''}
-                    `;
-                    pendingContainer.appendChild(orderElement);
-                });
-            }
-            
-            // Render preparing orders
-            const preparingContainer = document.getElementById('preparingOrders');
-            preparingContainer.innerHTML = '';
-            
-            if (preparingOrders.length === 0) {
-                preparingContainer.innerHTML = '<p class="text-gray-500 text-center">Hazırlanan sipariş yok</p>';
-            } else {
-                preparingOrders.forEach(order => {
-                    const orderElement = document.createElement('div');
-                    orderElement.className = 'border border-green-200 rounded-lg p-4 bg-green-50';
-                    orderElement.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h5 class="font-semibold text-green-800">Masa ${order.table_name}</h5>
-                                <p class="text-sm text-green-600">Sipariş #${order.id}</p>
-                            </div>
-                            <button onclick="updateOrderStatus(${order.id}, 'hazir')" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                                Hazır
-                            </button>
-                        </div>
-                        <div class="space-y-1">
-                            ${order.items.map(item => `
-                                <div class="flex justify-between text-sm">
-                                    <span>${item.product_name} x${item.quantity}</span>
-                                    <span>${item.subtotal.toFixed(2)} TL</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        ${order.customer_notes ? `<p class="text-xs text-green-600 mt-2">Not: ${order.customer_notes}</p>` : ''}
-                    `;
-                    preparingContainer.appendChild(orderElement);
-                });
+                alert('Ürün başarıyla eklendi!');
+            } catch(err) {
+                alert('Hata: ' + err.message);
             }
         }
 
-        // Helper functions
-        function getOrderStatusColor(status) {
-            const colors = {
-                'bekliyor': 'bg-red-100 text-red-800',
-                'hazirlaniyor': 'bg-orange-100 text-orange-800',
-                'hazir': 'bg-green-100 text-green-800',
-                'teslim_edildi': 'bg-blue-100 text-blue-800'
-            };
-            return colors[status] || 'bg-gray-100 text-gray-800';
+        async function deleteProduct(id) {
+            if(!confirm('Silmek istediğinize emin misiniz?')) return;
+            await fetch(`/api/products/${id}`, {method: 'DELETE', headers: getHeaders()});
+            loadProducts();
         }
 
-        function getOrderStatusText(status) {
-            const texts = {
-                'bekliyor': 'Bekliyor',
-                'hazirlaniyor': 'Hazırlanıyor',
-                'hazir': 'Hazır',
-                'teslim_edildi': 'Teslim Edildi'
-            };
-            return texts[status] || status;
+        // --- CATEGORIES ---
+        async function loadCategories() {
+            const res = await fetch('/api/products/categories', {headers: getHeaders()});
+            const data = await res.json();
+            const tbody = document.getElementById('categoriesTable');
+            tbody.innerHTML = '';
+            data.forEach(c => {
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-3 text-2xl">${c.icon || ''}</td>
+                        <td class="p-3 font-medium">${c.name}</td>
+                        <td class="p-3 text-gray-600">${c.order}</td>
+                        <td class="p-3"><button onclick="deleteCategory(${c.id})" class="text-red-500"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
         }
 
-        function getRoleText(role) {
-            const texts = {
-                'admin': 'Admin',
-                'kitchen': 'Mutfak',
-                'waiter': 'Garson',
-                'supervisor': 'Süpervizör'
-            };
-            return texts[role] || role;
+        async function addCategory() {
+            const name = prompt("Kategori Adı:");
+            if(!name) return;
+            const icon = prompt("İkon (Emoji):", "🍔");
+            
+            await fetch('/api/products/categories', {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({name, icon, order: 1})
+            });
+            loadCategories();
         }
 
-        function refreshKitchenOrders() {
-            loadKitchenOrders();
+        async function deleteCategory(id) {
+            if(!confirm('Silmek istediğinize emin misiniz?')) return;
+            await fetch(`/api/products/categories/${id}`, {method: 'DELETE', headers: getHeaders()});
+            loadCategories();
         }
 
-        function logout() {
-            localStorage.removeItem('authToken');
-            window.location.href = '/login.html';
+        // --- TABLES ---
+        async function loadTables() {
+            const res = await fetch('/api/tables', {headers: getHeaders()});
+            const data = await res.json();
+            const tbody = document.getElementById('tablesTable');
+            tbody.innerHTML = '';
+            data.forEach(t => {
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-3">${t.name}</td>
+                        <td class="p-3 font-bold text-blue-600">${t.number}</td>
+                        <td class="p-3"><button onclick="showQR(${t.id})" class="text-blue-500 underline">QR Göster</button></td>
+                        <td class="p-3"><button onclick="deleteTable(${t.id})" class="text-red-500"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `;
+            });
         }
+
+        async function addTable() {
+            const name = prompt("Masa Adı (Örn: Bahçe 1):");
+            if(!name) return;
+            const num = prompt("Masa No:");
+            if(!num) return;
+
+            await fetch('/api/tables', {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({name, number: parseInt(num)})
+            });
+            loadTables();
+        }
+
+        async function showQR(id) {
+            const res = await fetch(`/api/tables/${id}/qr`, {headers: getHeaders()});
+            const data = await res.json();
+            const win = window.open("", "_blank");
+            win.document.write(`<div style="text-align:center; margin-top:50px;"><h1>${data.table_name}</h1><img src="${data.qr_url}" width="300"/><br><button onclick="window.print()">YAZDIR</button></div>`);
+        }
+        
+        async function deleteTable(id) {
+            if(!confirm('Silmek istediğinize emin misiniz?')) return;
+            await fetch(`/api/tables/${id}`, {method: 'DELETE', headers: getHeaders()});
+            loadTables();
+        }
+        
+        // --- ORDERS ---
+        async function loadOrders() {
+            const res = await fetch('/api/orders', {headers: getHeaders()});
+            const data = await res.json();
+            const tbody = document.getElementById('ordersTable');
+            tbody.innerHTML = '';
+            data.forEach(o => {
+                let statusColor = 'text-gray-600';
+                if(o.status === 'hazir') statusColor = 'text-green-600';
+                if(o.status === 'bekliyor') statusColor = 'text-red-600';
+
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-3">#${o.id}</td>
+                        <td class="p-3 font-bold">${o.table_name}</td>
+                        <td class="p-3">${o.total_amount} ₺</td>
+                        <td class="p-3 font-bold ${statusColor}">${o.status.toUpperCase()}</td>
+                        <td class="p-3 text-sm text-gray-500">${new Date(o.created_at).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // İlk Yükleme
+        showSection('dashboard');
+        loadStats();
     </script>
 </body>
 </html>
