@@ -1,201 +1,28 @@
-/* Thermal Printer Styles for Receipts */
 @media print {
     body * {
         visibility: hidden;
     }
-    
-    .receipt-container, .receipt-container * {
+    #receipt-area, #receipt-area * {
         visibility: visible;
     }
-    
-    .receipt-container {
+    #receipt-area {
         position: absolute;
         left: 0;
         top: 0;
-        width: 80mm; /* Standard thermal printer width */
+        width: 80mm; /* Termal yazıcı genişliği */
         font-family: 'Courier New', monospace;
-        font-size: 12px;
-        line-height: 1.2;
-        margin: 0;
-        padding: 5mm;
-        box-sizing: border-box;
+        padding: 5px;
+        color: black;
+        background: white;
     }
-    
-    .no-print {
-        display: none !important;
-    }
-    
-    /* Ensure receipt fits thermal printer */
-    @page {
-        size: 80mm auto;
-        margin: 0;
-    }
+    .no-print { display: none !important; }
+    @page { margin: 0; }
 }
 
-.receipt-container {
-    width: 80mm;
-    max-width: 80mm;
-    background: white;
-    border: 1px solid #ddd;
-    padding: 10px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    line-height: 1.3;
-    margin: 20px auto;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* Ekran görünümü için (Mutfak panelinde gizli kalacak) */
+#receipt-area {
+    display: none;
 }
-
-.receipt-header {
-    text-align: center;
-    border-bottom: 1px dashed #000;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-}
-
-.receipt-header h2 {
-    font-size: 16px;
-    font-weight: bold;
-    margin: 0 0 5px 0;
-    text-transform: uppercase;
-}
-
-.receipt-header p {
-    margin: 2px 0;
-    font-size: 11px;
-}
-
-.receipt-info {
-    border-bottom: 1px dashed #000;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-}
-
-.receipt-info .info-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 2px 0;
-}
-
-.receipt-items {
-    border-bottom: 1px dashed #000;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-}
-
-.receipt-item {
-    display: flex;
-    justify-content: space-between;
-    margin: 3px 0;
-}
-
-.receipt-item .item-name {
-    flex: 1;
-    text-align: left;
-}
-
-.receipt-item .item-quantity {
-    width: 30px;
-    text-align: center;
-}
-
-.receipt-item .item-price {
-    width: 60px;
-    text-align: right;
-}
-
-.receipt-totals {
-    border-bottom: 1px dashed #000;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-}
-
-.receipt-totals .total-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 3px 0;
-}
-
-.receipt-totals .total-row.final {
-    font-weight: bold;
-    font-size: 14px;
-    border-top: 1px solid #000;
-    padding-top: 5px;
-    margin-top: 5px;
-}
-
-.receipt-footer {
-    text-align: center;
-    margin-top: 15px;
-}
-
-.receipt-footer p {
-    margin: 2px 0;
-    font-size: 10px;
-}
-
-.receipt-footer .thank-you {
-    font-weight: bold;
-    font-size: 12px;
-    margin-top: 10px;
-}
-
-/* Print button styles */
-.print-receipt-btn {
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    margin: 10px 5px;
-    transition: background 0.3s;
-}
-
-.print-receipt-btn:hover {
-    background: #218838;
-}
-
-.print-receipt-btn:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
-}
-
-/* Receipt preview modal */
-.receipt-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.receipt-modal-content {
-    background: white;
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.receipt-modal-close {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-}
-
-.receipt-modal-close:hover {
-    color: #000;
+@media print {
+    #receipt-area { display: block; }
 }

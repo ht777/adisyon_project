@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -7,11 +7,17 @@ from auth import require_role, get_current_active_user
 from models import UserRole
 from datetime import datetime, date, timedelta
 from sqlalchemy import func
+import os
+import shutil
+import logging
+
+# Hata ayıklama için logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("admin_reports")
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # --- MODELLER ---
-
 class SettingsUpdate(BaseModel):
     restaurant_name: str
     currency: str
@@ -19,6 +25,40 @@ class SettingsUpdate(BaseModel):
     service_charge: float
     wifi_password: Optional[str] = None
     order_timeout_minutes: int
+    logo_url: Optional[str] = None
+
+# --- YARDIMCI FONKSİYONLAR ---
+def safe_parse_date(date_val):
+    """Tarih verisini her türlü formattan kurtarmaya çalışan fonksiyon"""
+    if not date_val:
+        return None
+    
+    # Zaten datetime objesiyse direkt döndür
+    if isinstance(date_val, datetime):
+        return date_val
+    
+    # String ise parse etmeyi dene
+    if isinstance(date_val, str):
+        try:
+            # 1. Format: ISO (2023-11-20T14:30:00)
+            return datetime.fromisoformat(date_val)
+        except:
+            pass
+        
+        try:
+            # 2. Format: SQL Standart (2023-11-20 14:30:00.000000)
+            return datetime.strptime(date_val, "%Y-%m-%d %H:%M:%S.%f")
+        except:
+            pass
+
+        try:
+            # 3. Format: Saniyesiz (2023-11-20 14:30:00)
+            return datetime.strptime(date_val, "%Y-%m-%d %H:%M:%S")
+        except:
+            pass
+
+    # Hiçbiri olmazsa None dön (Bu veri bozuktur)
+    return None
 
 # --- ENDPOINTLER ---
 
@@ -27,45 +67,47 @@ async def get_dashboard_stats(
     current_user = Depends(require_role([UserRole.ADMIN, UserRole.SUPERVISOR])),
     db: Session = Depends(get_session)
 ):
-    # Date calculations
-    today_date = date.today()
-    today_start = datetime.combine(today_date, datetime.min.time())
-    today_end = datetime.combine(today_date, datetime.max.time())
+    # Tüm siparişleri çek ve Python tarafında işle (En güvenli yöntem)
+    all_orders = db.query(Order).all()
     
-    # Sayaçlar
     total_products = db.query(Product).filter(Product.is_active == True).count()
     total_tables = db.query(Table).filter(Table.is_active == True).count()
     
-    # Bugünün siparişleri (Herhangi bir statüdeki)
-    today_orders_query = db.query(Order).filter(Order.created_at >= today_start, Order.created_at <= today_end)
-    today_order_count = today_orders_query.count()
+    today = date.today()
+    today_order_count = 0
+    today_revenue = 0.0
+    active_orders = 0
     
-    # Bugünün cirosu (FIXED: HAZIR ve TESLIM_EDILDI statülerini dahil et)
-    today_revenue = db.query(func.sum(Order.total_amount)).filter(
-        Order.created_at >= today_start,
-        Order.created_at <= today_end,
-        Order.status.in_([OrderStatus.TESLIM_EDILDI, OrderStatus.HAZIR])
-    ).scalar() or 0.0
-    
-    # Aktif siparişler (FIXED: Sadece BEKLIYOR ve HAZIRLANIYOR sayılır)
-    active_orders = db.query(Order).filter(
-        Order.status.in_([OrderStatus.BEKLIYOR, OrderStatus.HAZIRLANIYOR])
-    ).count()
-    
-    # Haftalık Satış Grafiği Verisi
-    daily_trend = []
+    # Grafik için son 7 günü hazırla
+    daily_revenue = {} 
     for i in range(6, -1, -1):
-        day_date = today_date - timedelta(days=i)
-        day_start_range = datetime.combine(day_date, datetime.min.time())
-        day_end_range = datetime.combine(day_date, datetime.max.time())
+        d = (today - timedelta(days=i)).isoformat()
+        daily_revenue[d] = 0.0
+
+    for o in all_orders:
+        o_dt = safe_parse_date(o.created_at)
+        if not o_dt: continue # Tarihi bozuk siparişi atla
         
-        # Ciro hesaplaması HAZIR ve TESLİM EDİLDİ için
-        day_rev = db.query(func.sum(Order.total_amount)).filter(
-            Order.created_at >= day_start_range,
-            Order.created_at <= day_end_range,
-            Order.status.in_([OrderStatus.TESLIM_EDILDI, OrderStatus.HAZIR])
-        ).scalar() or 0.0
-        daily_trend.append({"date": day_date.isoformat(), "revenue": day_rev})
+        o_date = o_dt.date()
+        o_date_str = o_date.isoformat()
+        
+        # Sipariş durumu kontrolü (Büyük/küçük harf duyarsız)
+        status = str(o.status).lower() if o.status else ""
+        is_cancelled = status in ["cancelled", "iptal"]
+        is_active = status in ["pending", "preparing", "bekliyor", "hazirlaniyor"]
+        
+        # Bugünün verileri
+        if o_date == today:
+            today_order_count += 1
+            if not is_cancelled:
+                today_revenue += (o.total_amount or 0.0)
+        
+        if is_active:
+            active_orders += 1
+            
+        # Grafik verisi (İptal olmayanlar)
+        if o_date_str in daily_revenue and not is_cancelled:
+            daily_revenue[o_date_str] += (o.total_amount or 0.0)
 
     return {
         "overview": {
@@ -76,7 +118,7 @@ async def get_dashboard_stats(
             "today_orders": today_order_count,
             "today_revenue": today_revenue,
             "active_orders": active_orders,
-            "daily_trend": daily_trend
+            "daily_trend": [{"date": k, "revenue": v} for k, v in daily_revenue.items()]
         }
     }
 
@@ -87,50 +129,78 @@ async def get_sales_report(
     current_user = Depends(require_role([UserRole.ADMIN])),
     db: Session = Depends(get_session)
 ):
+    # Tarih seçilmediyse varsayılan ata
     if not start_date: start_date = date.today() - timedelta(days=30)
     if not end_date: end_date = date.today()
     
-    start_datetime = datetime.combine(start_date, datetime.min.time())
-    end_datetime = datetime.combine(end_date, datetime.max.time())
+    # DEBUG: Konsola bilgi bas
+    print(f"📊 RAPOR İSTEĞİ: {start_date} - {end_date}")
+    
+    all_orders = db.query(Order).all()
+    print(f"🗄️  Veritabanındaki Toplam Sipariş: {len(all_orders)}")
 
-    # FIXED: Rapor için de HAZIR ve TESLİM EDİLDİ statülerini dahil et
-    orders = db.query(Order).filter(
-        Order.created_at >= start_datetime,
-        Order.created_at <= end_datetime,
-        Order.status.in_([OrderStatus.TESLIM_EDILDI, OrderStatus.HAZIR])
-    ).all()
+    filtered_orders = []
+    total_revenue = 0.0
     
-    total_revenue = sum(o.total_amount for o in orders)
-    total_count = len(orders)
-    
-    # Günlük kırılım
     breakdown = {}
-    for o in orders:
-        d = o.created_at.date().isoformat()
-        if d not in breakdown: breakdown[d] = {"revenue": 0, "count": 0}
-        breakdown[d]["revenue"] += o.total_amount
-        breakdown[d]["count"] += 1
-        
-    # En çok satan ürünler (Bu tarih aralığında)
+    delta = end_date - start_date
+    for i in range(delta.days + 1):
+        day = (start_date + timedelta(days=i)).isoformat()
+        breakdown[day] = {"revenue": 0, "count": 0}
+
     product_stats = {}
-    order_ids = [o.id for o in orders]
-    if order_ids:
-        items = db.query(OrderItem).join(Product).filter(OrderItem.order_id.in_(order_ids)).all()
-        for item in items:
-            if not item.product: continue
-            pid = item.product_id
-            if pid not in product_stats:
-                product_stats[pid] = {"name": item.product.name, "qty": 0, "total": 0}
-            product_stats[pid]["qty"] += item.quantity
-            product_stats[pid]["total"] += item.subtotal
+    processed_count = 0
+
+    for o in all_orders:
+        # Tarihi güvenli parse et
+        o_dt = safe_parse_date(o.created_at)
+        
+        if not o_dt: 
+            continue
+            
+        o_date = o_dt.date()
+        
+        # Tarih aralığı kontrolü
+        if start_date <= o_date <= end_date:
+            processed_count += 1
+            
+            # İptal kontrolü
+            status = str(o.status).lower() if o.status else ""
+            if status in ["cancelled", "iptal"]:
+                continue
+                
+            filtered_orders.append(o)
+            amount = o.total_amount or 0.0
+            total_revenue += amount
+            
+            # Günlük kırılım
+            d_str = o_date.isoformat()
+            if d_str in breakdown:
+                breakdown[d_str]["revenue"] += amount
+                breakdown[d_str]["count"] += 1
+            
+            # Ürün istatistikleri
+            for item in o.items:
+                if not item.product: continue
+                pid = item.product_id
+                if pid not in product_stats:
+                    product_stats[pid] = {"name": item.product.name, "qty": 0, "total": 0}
+                
+                product_stats[pid]["qty"] += item.quantity
+                product_stats[pid]["total"] += (item.subtotal or 0.0)
+
+    print(f"✅ Tarih Aralığına Giren Sipariş: {processed_count}")
+    print(f"💰 Rapora Dahil Edilen (İptal Olmayan): {len(filtered_orders)}")
+    print(f"💵 Toplam Ciro: {total_revenue}")
 
     top_products = sorted(product_stats.values(), key=lambda x: x["total"], reverse=True)[:10]
+    daily_data = [{"date": k, **v} for k, v in sorted(breakdown.items())]
 
     return {
         "total_revenue": total_revenue,
-        "total_orders": total_count,
-        "average_order": total_revenue / total_count if total_count > 0 else 0,
-        "daily_breakdown": [{"date": k, **v, "orders": v["count"]} for k, v in sorted(breakdown.items())],
+        "total_orders": len(filtered_orders),
+        "average_order": total_revenue / len(filtered_orders) if len(filtered_orders) > 0 else 0,
+        "daily_breakdown": daily_data,
         "top_products": top_products
     }
 
@@ -162,5 +232,43 @@ async def update_system_settings(
     config.wifi_password = settings.wifi_password
     config.order_timeout_minutes = settings.order_timeout_minutes
     
+    if settings.logo_url is not None:
+        config.logo_url = settings.logo_url
+    
     db.commit()
     return {"message": "Ayarlar başarıyla güncellendi"}
+
+@router.post("/settings/logo")
+async def upload_restaurant_logo(
+    file: UploadFile = File(...),
+    current_user = Depends(require_role([UserRole.ADMIN])),
+    db: Session = Depends(get_session)
+):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Sadece resim dosyası yüklenebilir.")
+    
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    UPLOAD_DIR = os.path.join(BASE_DIR, "frontend", "static", "uploads")
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    
+    file_extension = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = f"restaurant_logo.{file_extension}"
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Dosya kaydedilemedi: {str(e)}")
+        
+    logo_url = f"/static/uploads/{filename}"
+    
+    config = db.query(RestaurantConfig).first()
+    if not config:
+        config = RestaurantConfig()
+        db.add(config)
+    
+    config.logo_url = logo_url
+    db.commit()
+    
+    return {"logo_url": logo_url}

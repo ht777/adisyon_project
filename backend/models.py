@@ -130,7 +130,7 @@ class RestaurantConfig(Base):
     service_charge = Column(Float, default=0.0)
     wifi_password = Column(String, nullable=True)
     order_timeout_minutes = Column(Integer, default=30)
-
+    logo_url = Column(String, nullable=True)
 # Database setup
 def get_engine():
     return create_engine("sqlite:///./restaurant.db", connect_args={"check_same_thread": False})

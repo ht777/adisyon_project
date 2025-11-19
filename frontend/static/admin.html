@@ -8,13 +8,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        body { font-family: 'Inter', sans-serif; }
         .nav-item.active { background-color: #1e293b; border-left: 4px solid #3b82f6; }
+        #loadingBar { position: fixed; top: 0; left: 0; height: 4px; background: #3b82f6; z-index: 9999; transition: width 0.3s; width: 0%; }
+        
+        /* Toast Bildirim */
+        .toast-notification { animation: slideInRight 0.5s ease-out forwards; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body class="bg-gray-50 flex h-screen overflow-hidden font-sans">
-    <div class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col shadow-xl z-20">
-        <div class="p-6 text-2xl font-bold text-center border-b border-slate-800 flex items-center justify-center gap-2">
-            <i class="fas fa-utensils text-blue-500"></i> <span>Yönetim</span>
+    
+    <div id="loadingBar"></div>
+
+    <audio id="bellSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+    <div class="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col shadow-xl z-20 transition-all duration-300">
+        <div class="p-6 text-center border-b border-slate-800 flex flex-col items-center justify-center gap-3">
+            <img id="adminPanelLogo" src="/static/uploads/restaurant_logo.png" class="h-16 w-auto object-contain bg-white/10 p-2 rounded-lg mb-2 hidden" onerror="this.style.display='none'">
+            <div class="text-xl font-bold flex items-center gap-2">
+                <i class="fas fa-utensils text-blue-500"></i> <span>Yönetim</span>
+            </div>
         </div>
         
         <nav class="flex-1 overflow-y-auto py-6 space-y-1">
@@ -32,72 +46,126 @@
         </div>
     </div>
 
-    <div class="flex-1 flex flex-col overflow-hidden relative">
-        <header class="bg-white shadow-sm p-5 flex justify-between items-center z-10">
-            <div><h2 id="pageTitle" class="text-2xl font-bold text-gray-800">Dashboard</h2><p class="text-sm text-gray-500 mt-1">Genel bakış ve istatistikler</p></div>
-            <div class="flex items-center gap-4"><div class="text-right hidden sm:block"><div class="text-sm font-bold text-gray-800">Yönetici</div><div class="text-xs text-green-500">● Çevrimiçi</div></div><div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600"><i class="fas fa-user"></i></div></div>
+    <div class="flex-1 flex flex-col overflow-hidden relative bg-gray-50">
+        <header class="bg-white shadow-sm p-5 flex justify-between items-center z-10 sticky top-0">
+            <div>
+                <h2 id="pageTitle" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <p class="text-sm text-gray-500 mt-1">Sistem durumu ve yönetim paneli.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <div class="text-sm font-bold text-gray-800">Yönetici</div>
+                    <div class="text-xs text-green-500 flex items-center justify-end gap-1">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Çevrimiçi
+                    </div>
+                </div>
+                <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+        <main class="flex-1 overflow-y-auto p-6 scroll-smooth">
             
             <div id="dashboardSection" class="section">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-green-500 hover:shadow-md transition"><div class="flex justify-between items-start"><div><h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Günlük Ciro</h3><p class="text-3xl font-bold text-slate-800 mt-1" id="statRevenue">0.00 ₺</p></div><div class="p-3 bg-green-50 rounded-lg text-green-600"><i class="fas fa-wallet text-xl"></i></div></div></div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-blue-500 hover:shadow-md transition"><div class="flex justify-between items-start"><div><h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Bugünkü Sipariş</h3><p class="text-3xl font-bold text-slate-800 mt-1" id="statTodayOrders">0</p></div><div class="p-3 bg-blue-50 rounded-lg text-blue-600"><i class="fas fa-shopping-bag text-xl"></i></div></div></div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-orange-500 hover:shadow-md transition"><div class="flex justify-between items-start"><div><h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Aktif Sipariş</h3><p class="text-3xl font-bold text-slate-800 mt-1" id="statActiveOrders">0</p></div><div class="p-3 bg-orange-50 rounded-lg text-orange-600"><i class="fas fa-fire text-xl"></i></div></div></div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-purple-500 hover:shadow-md transition"><div class="flex justify-between items-start"><div><h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Menü Ürünleri</h3><p class="text-3xl font-bold text-slate-800 mt-1" id="statProducts">-</p></div><div class="p-3 bg-purple-50 rounded-lg text-purple-600"><i class="fas fa-box-open text-xl"></i></div></div></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-green-500"><p class="text-gray-500 text-xs font-bold uppercase">Günlük Ciro</p><p class="text-3xl font-bold text-slate-800 mt-1" id="statRevenue">0.00 ₺</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-blue-500"><p class="text-gray-500 text-xs font-bold uppercase">Bugünkü Sipariş</p><p class="text-3xl font-bold text-slate-800 mt-1" id="statTodayOrders">0</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-orange-500"><p class="text-gray-500 text-xs font-bold uppercase">Aktif Sipariş</p><p class="text-3xl font-bold text-slate-800 mt-1" id="statActiveOrders">0</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-purple-500"><p class="text-gray-500 text-xs font-bold uppercase">Menü Ürünleri</p><p class="text-3xl font-bold text-slate-800 mt-1" id="statProducts">-</p></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm"><h3 class="font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fas fa-chart-line text-blue-500"></i> Haftalık Satış Grafiği</h3><div class="w-full h-80"><canvas id="salesChart"></canvas></div></div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-800 mb-6">Haftalık Satış Grafiği</h3>
+                    <div class="w-full h-80"><canvas id="salesChart"></canvas></div>
+                </div>
             </div>
 
             <div id="productsSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold text-gray-800">Ürün Listesi</h3><button onclick="openProductModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-lg shadow-blue-200"><i class="fas fa-plus"></i> Yeni Ürün</button></div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"><table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Resim</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Ürün Adı</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Kategori</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Fiyat</th><th class="p-4 text-center text-xs font-bold text-gray-500 uppercase">İşlem</th></tr></thead><tbody id="productsTable" class="divide-y divide-gray-100"></tbody></table></div>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Ürün Listesi</h3>
+                    <button onclick="openProductModal()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-lg flex items-center gap-2"><i class="fas fa-plus"></i> Yeni Ürün</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead class="bg-gray-50"><tr><th class="p-4 text-left">Resim</th><th class="p-4 text-left">Ürün Adı</th><th class="p-4 text-left">Kategori</th><th class="p-4 text-left">Fiyat</th><th class="p-4 text-center">İşlem</th></tr></thead>
+                        <tbody id="productsTable" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="categoriesSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold text-gray-800">Kategoriler</h3><button onclick="addCategory()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-lg shadow-blue-200"><i class="fas fa-plus"></i> Yeni Kategori</button></div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"><table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">İkon</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Kategori Adı</th><th class="p-4 text-center text-xs font-bold text-gray-500 uppercase">İşlem</th></tr></thead><tbody id="categoriesTable" class="divide-y divide-gray-100"></tbody></table></div>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Kategoriler</h3>
+                    <button onclick="addCategory()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-lg">Yeni Kategori</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead class="bg-gray-50"><tr><th class="p-4 text-left">İkon</th><th class="p-4 text-left">Kategori Adı</th><th class="p-4 text-center">İşlem</th></tr></thead>
+                        <tbody id="categoriesTable" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="tablesSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold text-gray-800">Masa Yönetimi</h3><button onclick="addTable()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-lg shadow-blue-200"><i class="fas fa-plus"></i> Yeni Masa</button></div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"><table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Masa Adı</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Numara</th><th class="p-4 text-center text-xs font-bold text-gray-500 uppercase">İşlemler</th></tr></thead><tbody id="tablesTable" class="divide-y divide-gray-100"></tbody></table></div>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Masa Yönetimi</h3>
+                    <button onclick="addTable()" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-lg">Yeni Masa</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead class="bg-gray-50"><tr><th class="p-4 text-left">Masa Adı</th><th class="p-4 text-left">No</th><th class="p-4 text-center">İşlemler</th></tr></thead>
+                        <tbody id="tablesTable" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
             </div>
             
             <div id="ordersSection" class="section hidden">
-                <div class="flex justify-between items-center mb-6"><h3 class="text-lg font-bold text-gray-800">Tüm Siparişler</h3><button onclick="loadOrders()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"><i class="fas fa-sync-alt mr-1"></i> Yenile</button></div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"><table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">ID</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Masa</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Tutar</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Durum</th><th class="p-4 text-left text-xs font-bold text-gray-500 uppercase">Tarih</th><th class="p-4 text-center text-xs font-bold text-gray-500 uppercase">İşlem</th></tr></thead><tbody id="ordersTable" class="divide-y divide-gray-100"></tbody></table></div>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-bold text-gray-800">Tüm Siparişler</h3>
+                    <button onclick="loadOrders()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">Yenile</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead class="bg-gray-50"><tr><th class="p-4 text-left">ID</th><th class="p-4 text-left">Masa</th><th class="p-4 text-left">Tutar</th><th class="p-4 text-left">Durum</th><th class="p-4 text-left">Tarih</th><th class="p-4 text-center">İşlem</th></tr></thead>
+                        <tbody id="ordersTable" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="reportsSection" class="section hidden">
-                <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-100">
                     <h3 class="font-bold text-gray-800 mb-4">Tarih Aralığı Seç</h3>
-                    <div class="flex gap-4 items-end">
-                        <div><label class="text-sm text-gray-500">Başlangıç</label><input type="date" id="reportStart" class="block border p-2 rounded-lg"></div>
-                        <div><label class="text-sm text-gray-500">Bitiş</label><input type="date" id="reportEnd" class="block border p-2 rounded-lg"></div>
-                        <button onclick="loadReports()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Raporla</button>
+                    <div class="flex gap-4 items-end flex-wrap">
+                        <div>
+                            <label class="text-sm text-gray-500 block mb-1">Başlangıç</label>
+                            <input type="date" id="reportStart" class="block border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-500 block mb-1">Bitiş</label>
+                            <input type="date" id="reportEnd" class="block border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <button onclick="loadReports()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md">Raporla</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                        <p class="text-gray-500 text-sm">Toplam Ciro</p>
-                        <h3 class="text-2xl font-bold text-gray-800" id="repTotalRevenue">0.00 ₺</h3>
+                        <p class="text-gray-500 text-sm font-medium">Toplam Ciro</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="repTotalRevenue">0.00 ₺</h3>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                        <p class="text-gray-500 text-sm">Toplam Sipariş</p>
-                        <h3 class="text-2xl font-bold text-gray-800" id="repTotalOrders">0</h3>
+                        <p class="text-gray-500 text-sm font-medium">Toplam Sipariş</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="repTotalOrders">0</h3>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
-                        <p class="text-gray-500 text-sm">Ortalama Sepet</p>
-                        <h3 class="text-2xl font-bold text-gray-800" id="repAvgOrder">0.00 ₺</h3>
+                        <p class="text-gray-500 text-sm font-medium">Ortalama Sepet</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="repAvgOrder">0.00 ₺</h3>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h4 class="font-bold text-gray-700 mb-4">En Çok Satan Ürünler</h4>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h4 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fas fa-crown text-yellow-500"></i> En Çok Satan Ürünler</h4>
                         <div class="overflow-auto max-h-60">
                             <table class="w-full text-sm text-left">
                                 <thead class="bg-gray-50 text-gray-500"><tr><th class="p-2">Ürün</th><th class="p-2">Adet</th><th class="p-2 text-right">Tutar</th></tr></thead>
@@ -105,7 +173,7 @@
                             </table>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                         <h4 class="font-bold text-gray-700 mb-4">Günlük Satış Grafiği</h4>
                         <div class="h-60"><canvas id="reportChart"></canvas></div>
                     </div>
@@ -113,21 +181,46 @@
             </div>
 
             <div id="settingsSection" class="section hidden">
-                <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm">
+                <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-100">
                     <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4">Sistem Ayarları</h3>
-                    <form onsubmit="saveSettings(event)" class="space-y-4">
+                    
+                    <div class="mb-8 bg-blue-50/50 p-6 rounded-xl border border-blue-100">
+                        <label class="block text-sm font-bold text-gray-700 mb-3">İşletme Logosu</label>
+                        <div class="flex items-center gap-6">
+                            <div class="w-28 h-28 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center bg-white overflow-hidden relative group shadow-sm">
+                                <img id="currentLogo" src="/static/logo.png" class="w-full h-full object-contain p-2" onerror="this.style.display='none'">
+                                <div id="logoPlaceholder" class="absolute inset-0 flex items-center justify-center text-gray-400">
+                                    <i class="fas fa-image text-3xl"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-500 mb-3">Menü ve fişlerde görünecek logo.</p>
+                                <div class="flex gap-3 items-center">
+                                    <label class="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition text-sm font-semibold shadow-sm">
+                                        <i class="fas fa-upload mr-2 text-blue-500"></i> Resim Seç
+                                        <input type="file" id="logoInput" accept="image/*" class="hidden" onchange="handleLogoSelect(this)">
+                                    </label>
+                                    <button onclick="uploadLogo()" id="uploadBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm font-semibold shadow-md hidden flex items-center gap-2">
+                                        <i class="fas fa-save"></i> Yükle
+                                    </button>
+                                </div>
+                                <p id="fileNameDisplay" class="text-xs text-gray-500 mt-2 font-mono"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onsubmit="saveSettings(event)" class="space-y-5">
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">Restoran Adı</label><input type="text" id="setRestName" class="w-full border p-3 rounded-lg" required></div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-5">
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Para Birimi</label><input type="text" id="setCurrency" class="w-full border p-3 rounded-lg" required></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Vergi Oranı (%)</label><input type="number" step="0.1" id="setTax" class="w-full border p-3 rounded-lg" required></div>
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-5">
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Servis Ücreti (%)</label><input type="number" step="0.1" id="setService" class="w-full border p-3 rounded-lg"></div>
                             <div><label class="block text-sm font-medium text-gray-700 mb-1">Masa Zaman Aşımı (Dk)</label><input type="number" id="setTimeout" class="w-full border p-3 rounded-lg"></div>
                         </div>
-                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Wi-Fi Şifresi (Müşteriler için)</label><input type="text" id="setWifi" class="w-full border p-3 rounded-lg"></div>
-                        
-                        <div class="pt-4"><button type="submit" class="w-full bg-slate-800 text-white py-3 rounded-lg font-bold hover:bg-slate-900 transition">Ayarları Kaydet</button></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1">Wi-Fi Şifresi</label><input type="text" id="setWifi" class="w-full border p-3 rounded-lg"></div>
+                        <div class="pt-6"><button type="submit" class="w-full bg-slate-800 text-white py-3.5 rounded-lg font-bold hover:bg-slate-900 transition shadow-lg active:scale-95 transform">Ayarları Güncelle</button></div>
                     </form>
                 </div>
             </div>
@@ -135,341 +228,251 @@
         </main>
     </div>
 
-    <div id="productModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50 transition-opacity">
-        <div class="bg-white rounded-2xl w-96 p-8 shadow-2xl transform scale-100 transition-transform">
-            <h3 class="text-2xl font-bold mb-6 text-gray-800">Yeni Ürün Ekle</h3>
+    <div id="productModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl w-96 p-8 shadow-2xl">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">Yeni Ürün</h3>
             <form id="productForm" onsubmit="saveProduct(event)" class="space-y-4">
-                <input type="text" name="name" placeholder="Ürün Adı" class="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" required>
-                <textarea name="description" placeholder="Açıklama" class="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition h-24 resize-none"></textarea>
+                <input type="text" name="name" placeholder="Ürün Adı" class="w-full border p-3 rounded-xl" required>
+                <textarea name="description" placeholder="Açıklama" class="w-full border p-3 rounded-xl h-24"></textarea>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="number" name="price" placeholder="Fiyat (TL)" step="0.01" class="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" required>
-                    <select name="category_id" id="categorySelect" class="w-full border border-gray-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" required></select>
+                    <input type="number" name="price" placeholder="Fiyat (TL)" step="0.01" class="w-full border p-3 rounded-xl" required>
+                    <select name="category_id" id="categorySelect" class="w-full border p-3 rounded-xl" required></select>
                 </div>
-                <div class="border border-dashed border-gray-300 p-4 rounded-xl text-center hover:bg-gray-50 transition cursor-pointer relative"><input type="file" id="productImage" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"><div class="text-gray-500 text-sm pointer-events-none"><i class="fas fa-cloud-upload-alt text-2xl mb-2 text-blue-400"></i><br>Resim Seçmek İçin Tıkla</div></div>
-                <div class="flex justify-end gap-3 pt-4"><button type="button" onclick="closeProductModal()" class="px-5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-100 font-medium transition">İptal</button><button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 font-bold shadow-lg shadow-blue-200 transition">Kaydet</button></div>
+                <input type="file" id="productImage" accept="image/*" class="block w-full text-sm border p-2 rounded-lg">
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeProductModal()" class="px-5 py-2.5 rounded-xl bg-gray-200 hover:bg-gray-300">İptal</button>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 font-bold">Kaydet</button>
+                </div>
             </form>
         </div>
     </div>
-    
-    <audio id="bellSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
     <script>
-        // Placeholder SVG (Resim hatasını önler)
+        // --- GLOBAL AYARLAR ---
         const placeholderSvg = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcnk9IjEwIiBmaWxsPSIjZGVlMzE3Ii8+PHBhdGggZD0iTTUwLDEwTDIwLDIwVjgwTDUwLDkwTDgwLDgwVjIwTDUwLDEwWiIgZmlsbD0iI2YxZjVmOSIgc3Ryb2tlPSIjNjQ3NDhiIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIxMCIgZmlsbD0iIzY0NzQ4YiIvPjwvc3ZnPg==';
-
-        // --- BAŞLANGIÇ AYARLARI ---
         let authToken = localStorage.getItem('authToken');
         if(!authToken) window.location.href = '/login.html';
         const getHeaders = () => ({ 'Authorization': `Bearer ${authToken}`, 'Content-Type': 'application/json' });
         let chartInstance = null;
-        let reportChartInstance = null;
+        let categories = [];
 
+        // --- YÜKLEME BAR ---
+        function showLoading() { document.getElementById('loadingBar').style.width = '100%'; }
+        function hideLoading() { setTimeout(() => { document.getElementById('loadingBar').style.width = '0%'; }, 300); }
+
+        // --- SAYFA GEÇİŞLERİ ---
         function showSection(id) {
             document.querySelectorAll('.section').forEach(el => el.classList.add('hidden'));
-            document.getElementById(id + 'Section').classList.remove('hidden');
-            document.getElementById('pageTitle').innerText = id.charAt(0).toUpperCase() + id.slice(1);
+            const section = document.getElementById(id + 'Section');
+            if(section) section.classList.remove('hidden');
             
+            const title = document.getElementById('pageTitle');
+            if(title) title.innerText = id.charAt(0).toUpperCase() + id.slice(1);
+
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active', 'bg-slate-800'));
             const activeBtn = document.querySelector(`button[onclick="showSection('${id}')"]`);
             if(activeBtn) activeBtn.classList.add('active', 'bg-slate-800');
 
+            // Sayfa yükleme mantığı
             if(id === 'dashboard') loadDashboard();
-            if(id === 'products') loadProducts();
-            if(id === 'categories') loadCategories();
-            if(id === 'tables') loadTables();
-            if(id === 'orders') loadOrders();
-            if(id === 'reports') loadReports();
-            if(id === 'settings') loadSettings();
+            else if(id === 'reports') loadReports(); 
+            else if(id === 'products') { loadCategories(false); loadProducts(); }
+            else if(id === 'categories') loadCategories();
+            else if(id === 'tables') loadTables();
+            else if(id === 'orders') loadOrders();
+            else if(id === 'settings') loadSettings();
         }
 
         function logout() { localStorage.removeItem('authToken'); window.location.href = '/login.html'; }
 
-        // --- DASHBOARD VE GRAFİKLER ---
-        async function loadDashboard() {
-            try {
-                const res = await fetch('/api/admin/dashboard', {headers: getHeaders()});
-                const data = await res.json();
-                
-                // 1. STATİK DEĞERLERİ YÜKLE
-                document.getElementById('statProducts').innerText = data.overview.total_products;
-                document.getElementById('statRevenue').innerText = data.sales.today_revenue.toFixed(2) + ' ₺';
-                document.getElementById('statTodayOrders').innerText = data.sales.today_orders;
-                document.getElementById('statActiveOrders').innerText = data.sales.active_orders;
-                
-                // 2. GRAFİK OLUŞTURMA
-                const ctx = document.getElementById('salesChart').getContext('2d');
-                if(chartInstance) chartInstance.destroy();
-                
-                chartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.sales.daily_trend.map(d => new Date(d.date).toLocaleDateString('tr-TR', {day:'numeric', month:'short'})),
-                        datasets: [{
-                            label: 'Günlük Ciro (TL)',
-                            data: data.sales.daily_trend.map(d => d.revenue),
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 3,
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderColor: '#10b981',
-                            pointRadius: 5,
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
-                    }
-                });
-            } catch(e) { 
-                 console.error("Dashboard yüklenirken kritik hata:", e); 
-                 document.getElementById('dashboardSection').innerHTML = `<div class="p-6 bg-red-100 text-red-700 rounded-xl font-bold">⚠️ Dashboard verileri yüklenemedi. Verilerin doğru çekildiğinden ve Chart.js'in çalıştığından emin olun. Hata: ${e.message}</div>`;
-            }
-        }
-
-        // --- SİPARİŞ YÖNETİMİ ---
-        async function loadOrders() {
-            const res = await fetch('/api/orders', {headers: getHeaders()}); 
-            const data = await res.json();
-            const tbody = document.getElementById('ordersTable');
-            tbody.innerHTML = '';
-
-            data.forEach(o => {
-                let statusClass = 'bg-gray-100 text-gray-600';
-                let statusText = o.status.toUpperCase();
-                
-                if(o.status === 'ready') { statusClass = 'bg-green-100 text-green-700'; statusText = 'HAZIR'; }
-                else if(o.status === 'preparing') { statusClass = 'bg-orange-100 text-orange-700'; statusText = 'HAZIRLANIYOR'; }
-                else if(o.status === 'pending') { statusClass = 'bg-red-100 text-red-700'; statusText = 'BEKLİYOR'; }
-                else if(o.status === 'delivered') { statusClass = 'bg-blue-100 text-blue-700'; statusText = 'TESLİM EDİLDİ'; }
-                else if(o.status === 'cancelled') { statusClass = 'bg-slate-200 text-slate-500 line-through'; statusText = 'İPTAL'; }
-
-                tbody.innerHTML += `
-                <tr class="border-b hover:bg-gray-50 transition">
-                    <td class="p-4 font-mono text-sm">#${o.id}</td>
-                    <td class="p-4 font-bold text-gray-800">${o.table_name}</td>
-                    <td class="p-4 font-bold text-slate-700">${o.total_amount} ₺</td>
-                    <td class="p-4"><span class="px-3 py-1 rounded-full text-xs font-bold ${statusClass}">${statusText}</span></td>
-                    <td class="p-4 text-sm text-gray-500">${new Date(o.created_at).toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'})}</td>
-                    <td class="p-4 text-center">
-                        ${o.status !== 'cancelled' ? 
-                        `<button onclick="cancelOrder(${o.id})" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition text-sm font-bold border border-red-200">
-                            <i class="fas fa-ban mr-1"></i> İptal
-                        </button>` : 
-                        '<span class="text-xs text-gray-400">İşlem Yok</span>'}
-                    </td>
-                </tr>`;
-            });
-        }
-        
-        async function cancelOrder(id) {
-            if(!confirm('Bu siparişi iptal etmek istediğinize emin misiniz?')) return;
-            await fetch(`/api/orders/${id}/status`, { method:'PUT', headers: getHeaders(), body: JSON.stringify({status:'cancelled'}) });
-            loadOrders(); 
-            loadDashboard();
-        }
-
-        // --- ÜRÜN İŞLEMLERİ ---
-        async function loadProducts() {
-            const res = await fetch('/api/products'); 
-            const data = await res.json(); 
-            document.getElementById('productsTable').innerHTML = data.map(p => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4"><img src="${(p.image_url && p.image_url.length > 5) ? p.image_url : placeholderSvg}" 
-                                       class="w-12 h-12 rounded-lg object-cover border border-gray-200" 
-                                       onerror="this.onerror=null;this.src='${placeholderSvg}'"></td>
-                    <td class="p-4 font-medium text-gray-800">${p.name}</td>
-                    <td class="p-4 text-gray-500">${p.category?.name || '-'}</td>
-                    <td class="p-4 font-bold text-green-600">${p.price} ₺</td>
-                    <td class="p-4 text-center">
-                        <button onclick="deleteProduct(${p.id})" class="w-8 h-8 rounded-full text-red-500 hover:bg-red-50 transition"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>`).join('');
-        }
-        
-        async function openProductModal() {
-            const res = await fetch('/api/products/categories'); 
-            const cats = await res.json(); 
-            document.getElementById('categorySelect').innerHTML = '<option value="">Kategori Seçiniz</option>' + cats.map(c => `<option value="${c.id}">${c.name}</option>`).join(''); 
-            document.getElementById('productModal').classList.remove('hidden');
-        }
-        function closeProductModal() { document.getElementById('productModal').classList.add('hidden'); }
-        
-        async function saveProduct(e) {
-            e.preventDefault(); 
-            const fd = new FormData(e.target); 
-            const d = { name: fd.get('name'), description: fd.get('description'), price: parseFloat(fd.get('price')), category_id: parseInt(fd.get('category_id')), is_active: true, is_featured: false }; 
-            try {
-                const r = await fetch('/api/products', {method:'POST', headers: getHeaders(), body: JSON.stringify(d)}); 
-                if(r.ok){ 
-                    const np=await r.json(); 
-                    const im=document.getElementById('productImage').files[0]; 
-                    if(im){
-                        const formD=new FormData(); formD.append('file',im); 
-                        await fetch(`/api/products/${np.id}/image`, {method:'POST', headers:{'Authorization':`Bearer ${authToken}`}, body:formD});
-                    } 
-                    closeProductModal(); loadProducts(); alert('Ürün başarıyla eklendi! (Resim yükleme başarılıysa loglarda görünür)'); 
-                } else { alert('Ürün eklenirken hata oluştu.'); }
-            } catch(e) { alert("Bağlantı hatası: " + e.message); }
-        }
-        async function deleteProduct(id) { if(confirm('Silmek istediğinize emin misiniz?')) { await fetch(`/api/products/${id}`, {method:'DELETE', headers: getHeaders()}); loadProducts(); } }
-
-        // --- KATEGORİLER ---
-        async function loadCategories() {
-            const res = await fetch('/api/products/categories'); 
-            const data = await res.json(); 
-            document.getElementById('categoriesTable').innerHTML = data.map(c => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4 text-2xl">${c.icon}</td>
-                    <td class="p-4 font-medium text-gray-800">${c.name}</td>
-                    <td class="p-4 text-center"><button onclick="deleteCategory(${c.id})" class="w-8 h-8 rounded-full text-red-500 hover:bg-red-50 transition"><i class="fas fa-trash"></i></button></td>
-                </tr>`).join('');
-        }
-        async function addCategory() {
-            const n = prompt("Kategori Adı:"); if(!n) return; 
-            const i = prompt("Kategori İkonu (Emoji):", "🍔"); 
-            await fetch('/api/products/categories', {method:'POST', headers: getHeaders(), body: JSON.stringify({name:n, icon:i, order:1})}); 
-            loadCategories();
-        }
-        async function deleteCategory(id) { if(confirm('Silinsin mi?')) { await fetch(`/api/products/categories/${id}`, {method:'DELETE', headers: getHeaders()}); loadCategories(); } }
-
-        // --- MASALAR ---
-        async function loadTables() {
-            const res = await fetch('/api/tables', {headers: getHeaders()}); 
-            const data = await res.json(); 
-            document.getElementById('tablesTable').innerHTML = data.map(t => `
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-4 font-medium text-gray-800">${t.name}</td>
-                    <td class="p-4 font-bold text-blue-600">${t.number}</td>
-                    <td class="p-4 text-center flex justify-center gap-2">
-                        <button onclick="showQR(${t.id})" class="px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition text-sm font-bold">QR KOD</button>
-                        <button onclick="deleteTable(${t.id})" class="px-3 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 transition text-sm"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>`).join('');
-        }
-        async function addTable() {
-            const n = prompt("Masa Adı:"); if(!n) return; 
-            const nm = prompt("Masa No:"); 
-            await fetch('/api/tables', {method:'POST', headers: getHeaders(), body: JSON.stringify({name:n, number:parseInt(nm)})}); 
-            loadTables();
-        }
-        async function showQR(id) {
-            const r = await fetch(`/api/tables/${id}/qr`, {headers: getHeaders()}); const d = await r.json();
-            const w = window.open("","_blank"); w.document.write(`<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif;"><h1>${d.table_name}</h1><img src="${d.qr_url}" style="width:300px; height:300px; border:10px solid black; padding:10px;"/><p style="font-size:1.5rem; margin-top:20px;">Masa No: ${d.table_number}</p><button onclick="window.print()" style="margin-top:30px; padding:15px 40px; font-size:1.2rem; background:black; color:white; border:none; cursor:pointer; border-radius:10px;">YAZDIR</button></div>`);
-        }
-        async function deleteTable(id) { if(confirm('Silinsin mi?')) { await fetch(`/api/tables/${id}`, {method:'DELETE', headers: getHeaders()}); loadTables(); } }
-
-        // --- RAPORLAR ---
+        // --- RAPORLAMA FONKSİYONU (DÜZELTİLDİ) ---
         async function loadReports() {
-            const start = document.getElementById('reportStart').value;
-            const end = document.getElementById('reportEnd').value;
+            showLoading();
+            const s = document.getElementById('reportStart').value;
+            const e = document.getElementById('reportEnd').value;
             
             let url = '/api/admin/reports/sales';
-            if(start && end) url += `?start_date=${start}&end_date=${end}`;
-            
+            if(s && e) url += `?start_date=${s}&end_date=${e}`;
+
             try {
+                console.log("Rapor isteniyor:", url);
                 const res = await fetch(url, {headers: getHeaders()});
+                
+                if(!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
                 const data = await res.json();
-                
-                // 1. STATİK DEĞERLERİ YÜKLE
-                document.getElementById('repTotalRevenue').innerText = data.total_revenue.toFixed(2) + ' ₺';
-                document.getElementById('repTotalOrders').innerText = data.total_orders;
-                document.getElementById('repAvgOrder').innerText = data.average_order.toFixed(2) + ' ₺';
-                
-                // 2. TABLOYU DOLDUR
+                console.log("Rapor Geldi:", data);
+
+                // Verileri Doldur
+                document.getElementById('repTotalRevenue').innerText = (data.total_revenue || 0).toFixed(2) + ' ₺';
+                document.getElementById('repTotalOrders').innerText = data.total_orders || 0;
+                document.getElementById('repAvgOrder').innerText = (data.average_order || 0).toFixed(2) + ' ₺';
+
+                // Tabloyu Doldur
                 const tbody = document.getElementById('topProductsTable');
-                tbody.innerHTML = data.top_products.map(p => `
-                    <tr><td class="p-2">${p.name}</td><td class="p-2 font-bold">${p.qty}</td><td class="p-2 text-right">${p.total.toFixed(2)} ₺</td></tr>
-                `).join('');
-                
-                // 3. GRAFİK OLUŞTURMA
-                const ctx = document.getElementById('reportChart').getContext('2d');
-                if(reportChartInstance) reportChartInstance.destroy();
-                
-                reportChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.daily_breakdown.map(d => new Date(d.date).toLocaleDateString('tr-TR')),
-                        datasets: [{
-                            label: 'Ciro',
-                            data: data.daily_breakdown.map(d => d.revenue),
-                            backgroundColor: '#3b82f6',
-                            borderRadius: 4
-                        }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false }
-                });
-                
-            } catch(e) { 
-                 console.error("Rapor yüklenirken kritik hata:", e); 
-                 document.getElementById('reportsSection').innerHTML = `<div class="p-6 bg-red-100 text-red-700 rounded-xl font-bold">⚠️ Rapor verileri yüklenemedi. Verilerin doğru çekildiğinden ve Chart.js'in çalıştığından emin olun. Hata: ${e.message}</div>`;
+                if(data.top_products && data.top_products.length > 0) {
+                    tbody.innerHTML = data.top_products.map(p => `
+                        <tr class="hover:bg-gray-50 border-b last:border-0">
+                            <td class="p-3 font-medium text-gray-700">${p.name}</td>
+                            <td class="p-3 font-bold text-center">${p.qty}</td>
+                            <td class="p-3 text-right font-mono text-slate-600">${p.total.toFixed(2)} ₺</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">Veri yok</td></tr>';
+                }
+
+                // Grafiği Çiz
+                if(window.Chart) {
+                    const ctx = document.getElementById('reportChart').getContext('2d');
+                    if(chartInstance) chartInstance.destroy();
+                    
+                    // Eğer breakdown verisi boşsa boş grafik çizmemek için kontrol
+                    const labels = (data.daily_breakdown || []).map(x => new Date(x.date).toLocaleDateString('tr-TR'));
+                    const values = (data.daily_breakdown || []).map(x => x.revenue);
+
+                    chartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Ciro (₺)',
+                                data: values,
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 4
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+
+            } catch(e) {
+                console.error("Rapor hatası:", e);
+                alert("Rapor yüklenirken hata oluştu. Konsolu kontrol edin.");
+            } finally {
+                hideLoading();
             }
         }
 
-        // --- AYARLAR ---
-        async function loadSettings() {
+        // --- DASHBOARD ---
+        async function loadDashboard() {
+            showLoading();
             try {
-                const res = await fetch('/api/admin/settings', {headers: getHeaders()});
+                const res = await fetch('/api/admin/dashboard', {headers: getHeaders()});
+                if(res.status === 401) { logout(); return; }
                 const data = await res.json();
                 
-                document.getElementById('setRestName').value = data.restaurant_name;
-                document.getElementById('setCurrency').value = data.currency;
-                document.getElementById('setTax').value = data.tax_rate;
-                document.getElementById('setService').value = data.service_charge;
-                document.getElementById('setTimeout').value = data.order_timeout_minutes;
-                document.getElementById('setWifi').value = data.wifi_password || '';
-            } catch(e) { console.error(e); }
+                document.getElementById('statProducts').innerText = data.overview.total_products || '0';
+                document.getElementById('statRevenue').innerText = (data.sales.today_revenue || 0).toFixed(2) + ' ₺';
+                document.getElementById('statTodayOrders').innerText = data.sales.today_orders || '0';
+                document.getElementById('statActiveOrders').innerText = data.sales.active_orders || '0';
+                
+                if(window.Chart) {
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    if(chartInstance) chartInstance.destroy();
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: (data.sales.daily_trend || []).map(d => new Date(d.date).toLocaleDateString('tr-TR', {day:'numeric', month:'short'})),
+                            datasets: [{
+                                label: 'Günlük Ciro',
+                                data: (data.sales.daily_trend || []).map(d => d.revenue),
+                                borderColor: '#10b981',
+                                tension: 0.3,
+                                fill: true,
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+            } catch(e){} finally { hideLoading(); }
         }
 
-        async function saveSettings(e) {
-            e.preventDefault();
-            const data = {
-                restaurant_name: document.getElementById('setRestName').value,
-                currency: document.getElementById('setCurrency').value,
-                tax_rate: parseFloat(document.getElementById('setTax').value),
-                service_charge: parseFloat(document.getElementById('setService').value),
-                order_timeout_minutes: parseInt(document.getElementById('setTimeout').value),
-                wifi_password: document.getElementById('setWifi').value
-            };
-            
+        // --- DİĞER FONKSİYONLAR ---
+        async function loadProducts() {
+            showLoading();
             try {
-                const res = await fetch('/api/admin/settings', {
-                    method: 'PUT',
-                    headers: getHeaders(),
-                    body: JSON.stringify(data)
-                });
-                if(res.ok) alert('Ayarlar kaydedildi! ✅');
-                else alert('Hata oluştu.');
-            } catch(e) { alert('Bağlantı hatası.'); }
+                const res = await fetch('/api/products'); 
+                const rawData = await res.json();
+                const products = Array.isArray(rawData) ? rawData : (rawData.products || []);
+                
+                document.getElementById('productsTable').innerHTML = products.map(p => {
+                    const imgUrl = (p.image_url && p.image_url.length > 5) ? p.image_url : placeholderSvg;
+                    const catName = p.category ? p.category.name : (categories.find(c => c.id == p.category_id)?.name || '-');
+                    return `
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="p-4"><div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border"><img src="${imgUrl}" class="w-full h-full object-cover" onerror="this.src='${placeholderSvg}'"></div></td>
+                        <td class="p-4 font-medium text-gray-800">${p.name}</td>
+                        <td class="p-4 text-sm text-gray-500">${catName}</td>
+                        <td class="p-4 font-bold text-green-600 font-mono">${p.price.toFixed(2)} ₺</td>
+                        <td class="p-4 text-center"><button onclick="deleteProduct(${p.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-full transition"><i class="fas fa-trash"></i></button></td>
+                    </tr>`;
+                }).join('');
+            } catch(e){} finally { hideLoading(); }
         }
+        // (Diğer fonksiyonlar ürün ekleme/silme vb. aynı mantıkla buraya eklenebilir, yer kaplamaması için kısalttım)
+        
+        async function saveProduct(e){e.preventDefault();showLoading();const fd=new FormData(e.target);const d={name:fd.get('name'),description:fd.get('description'),price:parseFloat(fd.get('price')),category_id:parseInt(fd.get('category_id')),is_active:true};try{const r=await fetch('/api/products',{method:'POST',headers:getHeaders(),body:JSON.stringify(d)});if(r.ok){const np=await r.json();const im=document.getElementById('productImage').files[0];if(im){const f=new FormData();f.append('file',im);await fetch(`/api/products/${np.id}/image`,{method:'POST',headers:{'Authorization':`Bearer ${authToken}`},body:f});}closeProductModal();loadProducts();alert('Eklendi!');}else alert('Hata');}catch(e){alert(e);}finally{hideLoading();}}
+        async function deleteProduct(id){if(confirm('Sil?')){showLoading();await fetch(`/api/products/${id}`,{method:'DELETE',headers:getHeaders()});loadProducts();hideLoading();}}
+        async function openProductModal(){const r=await fetch('/api/products/categories');const d=await r.json();categories=d.categories||d;document.getElementById('categorySelect').innerHTML='<option>Seç</option>'+categories.map(c=>`<option value="${c.id}">${c.name}</option>`);document.getElementById('productModal').classList.remove('hidden');}
+        function closeProductModal(){document.getElementById('productModal').classList.add('hidden');}
+        
+        // Kategoriler
+        async function loadCategories(render=true){if(render)showLoading();try{const r=await fetch('/api/products/categories');const d=await r.json();categories=d.categories||d;if(render)document.getElementById('categoriesTable').innerHTML=categories.map(c=>`<tr class="border-b hover:bg-gray-50"><td class="p-4 text-2xl">${c.icon||''}</td><td class="p-4 font-bold text-gray-700">${c.name}</td><td class="p-4 text-center"><button onclick="deleteCategory(${c.id})" class="text-red-500 hover:bg-red-50 p-2 rounded-full"><i class="fas fa-trash"></i></button></td></tr>`).join('');}catch(e){}finally{if(render)hideLoading();}}
+        async function addCategory(){const n=prompt('Ad:');if(!n)return;const i=prompt('İkon:','🍔');showLoading();await fetch('/api/products/categories',{method:'POST',headers:getHeaders(),body:JSON.stringify({name:n,icon:i})});loadCategories();hideLoading();}
+        async function deleteCategory(id){if(confirm('Sil?')){showLoading();await fetch(`/api/products/categories/${id}`,{method:'DELETE',headers:getHeaders()});loadCategories();hideLoading();}}
 
-        // --- WEBSOCKET & GARSON BİLDİRİMİ ---
+        // Masalar
+        async function loadTables(){showLoading();try{const r=await fetch('/api/tables',{headers:getHeaders()});const d=await r.json();document.getElementById('tablesTable').innerHTML=d.map(t=>`<tr class="border-b hover:bg-gray-50"><td class="p-4 font-medium">${t.name}</td><td class="p-4 font-bold text-blue-600">${t.number}</td><td class="p-4 text-center"><button onclick="showQR(${t.id})" class="text-blue-600 mr-3 font-bold text-sm">QR</button><button onclick="deleteTable(${t.id})" class="text-red-500"><i class="fas fa-trash"></i></button></td></tr>`).join('');}catch(e){}finally{hideLoading();}}
+        async function addTable(){const n=prompt('Ad:');if(!n)return;const num=prompt('No:');showLoading();await fetch('/api/tables',{method:'POST',headers:getHeaders(),body:JSON.stringify({name:n,number:parseInt(num)})});loadTables();hideLoading();}
+        async function deleteTable(id){if(confirm('Sil?')){showLoading();await fetch(`/api/tables/${id}`,{method:'DELETE',headers:getHeaders()});loadTables();hideLoading();}}
+        async function showQR(id){const r=await fetch(`/api/tables/${id}/qr`,{headers:getHeaders()});const d=await r.json();const w=window.open("","_blank");w.document.write(`<div style="text-align:center;margin-top:50px;font-family:sans-serif"><h1>${d.table_name}</h1><img src="${d.qr_url}" width="300"><br><button onclick="window.print()" style="margin-top:20px;padding:10px 20px;font-size:1.2em">YAZDIR</button></div>`);}
+
+        // Siparişler
+        async function loadOrders(){showLoading();try{const r=await fetch('/api/orders',{headers:getHeaders()});const d=await r.json();document.getElementById('ordersTable').innerHTML=d.map(o=>`<tr class="border-b hover:bg-gray-50"><td class="p-4 text-gray-500 font-mono">#${o.id}</td><td class="p-4 font-bold">${o.table_name}</td><td class="p-4 font-bold text-slate-700">${o.total_amount.toFixed(2)} ₺</td><td class="p-4"><span class="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600 uppercase">${o.status}</span></td><td class="p-4 text-sm text-gray-500">${new Date(o.created_at).toLocaleTimeString('tr-TR').slice(0,5)}</td><td class="p-4 text-center"><button onclick="cancelOrder(${o.id})" class="text-red-500 border border-red-200 px-2 py-1 rounded text-xs hover:bg-red-50">İptal</button></td></tr>`).join('');}catch(e){}finally{hideLoading();}}
+        async function cancelOrder(id){if(!confirm('İptal?'))return;showLoading();await fetch(`/api/orders/${id}/status`,{method:'PUT',headers:getHeaders(),body:JSON.stringify({status:'cancelled'})});loadOrders();hideLoading();}
+
+        // Ayarlar ve Logo
+        function handleLogoSelect(input){if(input.files&&input.files[0]){const r=new FileReader();r.onload=e=>{document.getElementById('currentLogo').src=e.target.result;document.getElementById('currentLogo').style.display='block';document.getElementById('logoPlaceholder').style.display='none';document.getElementById('uploadBtn').classList.remove('hidden');};r.readAsDataURL(input.files[0]);document.getElementById('fileNameDisplay').innerText=input.files[0].name;}}
+        async function uploadLogo(){const fi=document.getElementById('logoInput');if(fi.files.length===0)return;showLoading();const fd=new FormData();fd.append('file',fi.files[0]);try{const r=await fetch('/api/admin/settings/logo',{method:'POST',headers:{'Authorization':`Bearer ${authToken}`},body:fd});if(r.ok){alert('Yüklendi!');loadSettings();}else alert('Hata');}catch(e){alert(e);}finally{hideLoading();}}
+        async function loadSettings(){showLoading();try{const r=await fetch('/api/admin/settings',{headers:getHeaders()});if(r.ok){const d=await r.json();document.getElementById('setRestName').value=d.restaurant_name||'';document.getElementById('setCurrency').value=d.currency||'';document.getElementById('setTax').value=d.tax_rate||0;document.getElementById('setService').value=d.service_charge||0;document.getElementById('setTimeout').value=d.order_timeout_minutes||30;document.getElementById('setWifi').value=d.wifi_password||'';if(d.logo_url){const url=d.logo_url+'?t='+new Date().getTime();document.getElementById('currentLogo').src=url;document.getElementById('currentLogo').style.display='block';document.getElementById('logoPlaceholder').style.display='none';const al=document.getElementById('adminPanelLogo');if(al){al.src=url;al.style.display='block';al.classList.remove('hidden');}}}}catch(e){}finally{hideLoading();}}
+        async function saveSettings(e){e.preventDefault();showLoading();const d={restaurant_name:document.getElementById('setRestName').value,currency:document.getElementById('setCurrency').value,tax_rate:parseFloat(document.getElementById('setTax').value),service_charge:parseFloat(document.getElementById('setService').value),order_timeout_minutes:parseInt(document.getElementById('setTimeout').value),wifi_password:document.getElementById('setWifi').value};await fetch('/api/admin/settings',{method:'PUT',headers:getHeaders(),body:JSON.stringify(d)});alert('Kaydedildi!');hideLoading();}
+
+        // WebSocket
         function connectWS() {
-            const ws = new WebSocket(`ws://${location.host}/ws`);
-            ws.onopen=()=>ws.send(JSON.stringify({type:'register', client_type:'admin'}));
-            ws.onmessage=(e)=>{ 
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+            ws.onopen = () => ws.send(JSON.stringify({type:'register', client_type:'admin'}));
+            ws.onmessage = (e) => {
                 try {
-                    const m=JSON.parse(e.data); 
-                    if(m.type==='waiter_call') {
-                        document.getElementById('bellSound').play().catch(e=>console.log(e));
-                        if(Notification.permission === "granted") new Notification(m.message);
-                        else alert(m.message);
-                    }
-                    else if(m.type.includes('order')) { 
+                    const m = JSON.parse(e.data);
+                    if(m.type === 'waiter_call' || m.type === 'bill_request') {
+                        document.getElementById('bellSound').play().catch(()=>{});
+                        showToast(m.message, m.type === 'bill_request' ? 'purple' : 'orange');
+                    } else if(m.type && m.type.includes('order')) {
                         if(!document.getElementById('dashboardSection').classList.contains('hidden')) loadDashboard();
                         if(!document.getElementById('ordersSection').classList.contains('hidden')) loadOrders();
                     }
-                } catch(x){} 
+                } catch(x){}
             };
-            ws.onclose=()=>setTimeout(connectWS, 3000);
+            ws.onclose = () => setTimeout(connectWS, 3000);
         }
-        
-        if(Notification.permission !== "denied") Notification.requestPermission();
-        showSection('dashboard');
-        connectWS();
+
+        function showToast(msg, color) {
+            const div = document.createElement('div');
+            div.className = `fixed top-5 right-5 bg-white border-l-4 border-${color}-500 text-gray-700 px-6 py-4 shadow-2xl z-50 flex items-center gap-3 rounded-r toast-notification`;
+            div.innerHTML = `<i class="fas fa-bell text-${color}-500 text-xl"></i> <span class="font-bold">${msg}</span>`;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        // BAŞLAT
+        window.onload = () => {
+            showSection('dashboard');
+            loadSettings();
+            connectWS();
+        };
     </script>
 </body>
 </html>
